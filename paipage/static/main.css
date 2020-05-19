@@ -1,0 +1,59 @@
+html, body {
+	height: 100%;
+	padding: 0;
+	background-color: #2A3F54;
+}
+.container-fluid {
+	padding: 0;
+	height: 100%;
+}
+
+.admin-bar {
+	padding: 6px 20px;
+	text-align: center;
+	background-color: #444444;
+	color: white;
+}
+
+/* Common page - left menu */
+.menu-left {
+	color: white;
+	min-height: 100%;
+	padding: 0;
+}
+.menu-left-content {
+	padding-left: 0;
+}
+.menu-left-content > ul {
+	padding-left: 28px;
+}
+.menu-left-content > ul > li {
+	margin-bottom: 6px;
+}
+.menu-left-header {
+	background-color: #385470;
+	margin-bottom: 16px;
+}
+a.link-white {
+	color: white;
+}
+a.link-white:hover {
+	color: #cccccc;
+	text-decoration: underline;
+}
+
+/* Common page - content */
+.page-main {
+	background-color: #F7F7F7;
+	min-height: 100%;
+	padding-left: 0;
+	padding-right: 0;
+}
+.page-main-content {
+	display: block;
+	position: relative;
+	float: left;
+	width: 100%;
+	padding-bottom: 96px;
+	min-height: 64px;
+}

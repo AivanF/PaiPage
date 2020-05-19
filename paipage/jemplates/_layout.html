@@ -1,0 +1,62 @@
+{% extends "_basic.html" %}
+{% import "__macros.html" as macros with context %}
+
+{% block content %}
+
+{# Admin header #}
+{% if request.user.is_authenticated %}
+<div class="col-xs-12 admin-bar">
+	{% if request.user.is_staff %}
+	<span class="glyphicon glyphicon-lock"></span>
+	{% else %}
+	<span class="glyphicon glyphicon-user"></span>
+	{% endif %}
+	{{ request.user.username }}
+
+	<a class="link-white" href="/admin/">
+		<span class="glyphicon glyphicon-th-list"></span> База данных
+	</a>
+
+	{# TODO: JS onclick to make "next" = current page #}
+	<a class="link-white" href="/admin/logout/?next=/">
+		<span class="glyphicon glyphicon-log-out"></span> Выход
+	</a>
+</div>
+{% endif %}
+
+{# Table of content #}
+<div class="col-xs-2 menu-left">
+	<div class="col-xs-12 text-center menu-left-header">
+		<h3>{{ config.site_name }}</h3>
+	</div>
+
+	<div class="col-xs-12 menu-left-content">
+		{#
+			www.glyphicons.com Halflings set
+			https://www.w3schools.com/bootstrap/bootstrap_ref_comp_glyphs.asp
+		#}
+		<ul>
+			{% if upper -%}
+			{{ macros.pageli(upper, lang, True) }}
+			{%- endif -%}
+
+			{%- for page in children -%}
+			{{ macros.pageli(page, lang) }}
+			{%- endfor %}
+		</ul>
+
+		{{ macros.lang_select() }}
+	</div>
+</div>
+
+{# Page data #}
+<div class="col-xs-10 page-main">
+	<div id="blind">
+		<div class="blind-inner col-xs-12 text-center">
+			<div class="loader"></div>
+		</div>
+	</div>
+
+	{% block body_content %}{% endblock %}
+</div><!-- col-xs-10 page-main -->
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "_layout.html" %}
+
+{% block title %}{{ text.title }}{% endblock %}
+
+{% block body_content %}
+<div class="col-xs-12">
+	<h1>{{ text.title }}</h1>
+	{{ text.text_full |safe }}
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% macro pageli(page, lang, upper=False) -%}
+	{% set txt = page.get_text(lang) -%}
+	{% if upper -%}
+		{% set direction = "left" -%}
+	{% else -%}
+		{% set direction = "right" -%}
+	{%- endif -%}
+
+	{%- if txt -%}
+	<li><a class="link-white" href="/{{ page.url }}">
+		<span class="glyphicon glyphicon-chevron-{{ direction }}"></span> {{ txt.title }}
+	</a></li>
+	{%- endif %}
+{%- endmacro %}
+
+{% macro lang_select() -%}
+	{% for key, name in config.language_available.items() %}
+		{{ key |safe }}
+		<a href="/_lang/{{ key }}?next={{ request.path }}">
+			{{ name |safe }}
+		</a>
+	{% endfor %}
+{%- endmacro %}
