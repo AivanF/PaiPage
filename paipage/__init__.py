@@ -21,7 +21,8 @@ class Configurate:
 	def __init__(self,
 			settings_name,
 			site_name,
-			template_default='pg-usual',
+			template_page_default='pg-usual',
+			template_layout_default='lo-menu-left',
 			language_default=None,
 			language_available=None,
 			logger=None,
@@ -32,7 +33,8 @@ class Configurate:
 		assert isinstance(site_name, str) and len(site_name) > 0
 		self.site_name = site_name
 
-		self.template_default = template_default
+		self.template_page_default = template_page_default
+		self.template_layout_default = template_layout_default
 
 		for x in language_available:
 			assert isinstance(x, Language)

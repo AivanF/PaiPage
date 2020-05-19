@@ -1,6 +1,7 @@
 {% extends "pg-usual.html" %}
 
-{% block page_down %}
+{% block page_content %}
+{{ super() }}
 <div class="page-card-holder">
 {%- for page in children -%}
 	{% set txt = page.get_text(lang) -%}

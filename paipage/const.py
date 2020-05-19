@@ -1,4 +1,5 @@
 
+HTML_EXT = '.html'
 PATH_INDEX = 'index'
 
 LANG_NO = '_'

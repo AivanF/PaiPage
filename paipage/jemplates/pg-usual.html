@@ -1,4 +1,4 @@
-{% extends "_layout.html" %}
+{% extends layout_template %}
 
 {% block title %}{{ text.title }}{% endblock %}
 
@@ -18,6 +18,5 @@
 	<div class="page-main-content">
 		{{ text.text_full |safe }}
 	</div>
-	{% block page_down %}{% endblock %}
 </div>
 {% endblock %}

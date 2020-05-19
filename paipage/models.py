@@ -30,7 +30,8 @@ class Page(models.Model):
 	url = models.CharField(max_length=256, null=False, unique=True)
 	public = models.BooleanField(default=True)
 	# TODO: make choices
-	template = models.CharField(default=config.template_default, max_length=256, null=False)
+	template = models.CharField(default='', max_length=256, null=False, blank=True)
+	layout = models.CharField(default='', max_length=256, null=False, blank=True)
 
 	class Meta:
 		unique_together = ('upper', 'url',)
