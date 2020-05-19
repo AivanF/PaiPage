@@ -7,16 +7,22 @@ import os, sys
 # TODO: move to `const`
 LANG_NO = '_'
 LANG_KEY = 'lang'
+REQUIRED_STRINGS = (
+	'name',  # lang name
+	'languages',  # lang selection menu
+	'error404',  # for bad URLs
+	'errorNoLang',  # for pages with no text in current lang
+)
 
 config = None
 
 
 class Language:
-	def __init__(self, code, name, error404, errorNoLang):
+	def __init__(self, code, strings):
 		self.code = code
-		self.name = name
-		self.error404 = error404
-		self.errorNoLang = errorNoLang
+		for key in REQUIRED_STRINGS:
+			assert key in strings, f'No string "{key}" for lang "{code}"'
+		self.strings = strings
 
 
 class Configurate:

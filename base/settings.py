@@ -137,15 +137,21 @@ paipage.Configurate(
 	language_available=[
 		paipage.Language(
 			code='en',
-			name='English',
-			error404='Not found',
-			errorNoLang='Not available in this language',
+			strings=dict(
+				name='English',
+				languages='Other languages',
+				error404='Not found',
+				errorNoLang='Not available in this language',
+			),
 		),
 		paipage.Language(
 			code='ru',
-			name='Русский',
-			error404='Not found',
-			errorNoLang='Not available in this language',
+			strings=dict(
+				name='Русский',
+				languages='Другие языки',
+				error404='Не найдено',
+				errorNoLang='Не доступно на этом языке',
+			),
 		),
 	],
 )

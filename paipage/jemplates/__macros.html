@@ -7,17 +7,24 @@
 	{%- endif -%}
 
 	{%- if txt -%}
-	<li><a class="link-white" href="/{{ page.url }}">
+	<li><a href="/{{ page.url }}">
 		<span class="glyphicon glyphicon-chevron-{{ direction }}"></span> {{ txt.title }}
 	</a></li>
 	{%- endif %}
 {%- endmacro %}
 
 {% macro lang_select() -%}
-	{% for key, name in config.language_available.items() %}
-		{{ key |safe }}
-		<a href="/_lang/{{ key }}?next={{ request.path }}">
-			{{ name |safe }}
-		</a>
-	{% endfor %}
+	<div class="col-xs-12">
+		{{ strings['languages'] }}:
+	</div>
+	<br>
+	<ul>
+	{% for key, x in config.language_available.items() -%}
+		{% if key != lang %}
+		<li><a href="/_lang/{{ key }}?next={{ request.path }}">
+			{{ x.strings['name'] }}
+		</a></li>
+		{%- endif %}
+	{%- endfor %}
+	</ul>
 {%- endmacro %}

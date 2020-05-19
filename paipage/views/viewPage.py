@@ -34,5 +34,6 @@ class PageView(View):
 			'lang': lang,
 			'upper': page.upper,
 			'children': list(page.children.all()),
+			'strings': config.language_available[lang].strings,
 		}
 		return render(request, 'page.html', params)

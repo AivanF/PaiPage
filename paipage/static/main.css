@@ -23,6 +23,7 @@ html, body {
 }
 .menu-left-content {
 	padding-left: 0;
+	color: white;
 }
 .menu-left-content > ul {
 	padding-left: 28px;
@@ -34,10 +35,10 @@ html, body {
 	background-color: #385470;
 	margin-bottom: 16px;
 }
-a.link-white {
+.menu-left-content > ul > li > a {
 	color: white;
 }
-a.link-white:hover {
+.menu-left-content > ul > li > a:hover {
 	color: #cccccc;
 	text-decoration: underline;
 }
