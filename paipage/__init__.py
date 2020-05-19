@@ -22,7 +22,7 @@ class Configurate:
 			settings_name,
 			site_name,
 			template_page_default='pg-usual',
-			template_layout_default='lo-menu-left',
+			template_layout_default='lo-menu-top',
 			language_default=None,
 			language_available=None,
 			logger=None,

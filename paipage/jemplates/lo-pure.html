@@ -1,0 +1,12 @@
+{% extends "basic.html" %}
+{% import "_macros.html" as macros with context %}
+
+{% block content %}
+{# Admin header #}
+{{ macros.adminka() }}
+
+{# Page data #}
+{% block page_content %}{% endblock %}
+
+{{ macros.powered_by() }}
+{% endblock %}

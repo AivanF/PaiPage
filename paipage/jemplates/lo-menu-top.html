@@ -3,7 +3,7 @@
 
 {% block meta %}
 {{ super() }}
-<link rel="stylesheet" href="/static/lo-menu-left.css">
+<link rel="stylesheet" href="/static/lo-menu-top.css">
 {% endblock %}
 
 {% macro pageli(page, lang, upper=False) -%}
@@ -15,15 +15,17 @@
 	{%- endif -%}
 
 	{%- if txt -%}
-	<li>
-		{% if page.pk != current.pk -%}
+		{% if page.pk == current.pk -%}
+		<div class="menu-top-section menu-top-section-selected">
+		{% else %}
+		<div class="menu-top-section">
 		<a class="link-white" href="/{{ page.url }}">
 		{%- endif -%}
-		<span class="glyphicon glyphicon-chevron-{{ direction }}"></span> {{ txt.title }}
+		{{ txt.title }}
 		{%- if page.pk != current.pk -%}
 		</a>
 		{%- endif %}
-	</li>
+		</div>
 	{%- endif %}
 {%- endmacro %}
 
@@ -33,27 +35,26 @@
 {{ macros.adminka() }}
 
 {# Table of content #}
-<div class="col-xs-2 menu-left">
-	<div class="col-xs-12 text-center menu-left-title">
-		<a class="link-white" href="/"><h3>{{ config.site_name }}</h3></a>
+<div class="col-xs-12 menu-top">
+	<div class="menu-top-title">
+		<a class="link-white" href="/">{{ config.site_name }}</a>
 	</div>
 
-	<div class="col-xs-12 menu-left-content">
-		<ul>
-			{# {% if upper -%}
-			{{ pageli(upper, lang, True) }}
-			{%- endif -%} #}
-			{%- for page in sections -%}
-			{{ pageli(page, lang) }}
-			{%- endfor %}
-		</ul>
+	<div class="menu-top-content">
+		{# {% if upper -%}
+		{{ pageli(upper, lang, True) }}
+		{%- endif -%} #}
+		{%- for page in sections -%}
+		{{ pageli(page, lang) }}
+		{%- endfor %}
 
-		{{ macros.lang_list() }}
+		<!-- TODO: here! -->
+		<!-- {{ macros.lang_list() }} -->
 	</div>
 </div>
 
 {# Page data #}
-<div class="col-xs-10 page-main">
+<div class="col-xs-12 page-main">
 	{% block page_content %}{% endblock %}
 </div>
 

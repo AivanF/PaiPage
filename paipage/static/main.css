@@ -1,7 +1,7 @@
 html, body {
 	height: 100%;
 	padding: 0;
-	background-color: hsl(210,33%,25%);
+	background-color: hsl(210,33%,20%);
 }
 .container-fluid {
 	padding: 0;
@@ -14,12 +14,17 @@ html, body {
 	background-color: hsl(0,0%,27%);
 	color: white;
 }
+.paipage-footer {
+	padding: 32px 0px;
+	text-align: center;
+	color: hsl(210,30%,50%);
+}
 
 .link-white {
 	color: white;
 }
-.link-white:hover {
-	color: #cccccc;
+a.link-white:hover {
+	color: hsl(0,0%,80%);
 	text-decoration: underline;
 }
 
@@ -28,43 +33,6 @@ html, body {
 }
 .upheader ~ h1 {
 	margin-top: 0px;
-}
-
-/* Common page - left menu */
-.menu-left {
-	color: white;
-	min-height: 100%;
-	padding: 0;
-}
-.menu-left-content {
-	padding-left: 0;
-	color: white;
-}
-.menu-left-content > ul {
-	padding-left: 28px;
-}
-.menu-left-content > ul > li {
-	margin-bottom: 6px;
-}
-.menu-left-header {
-	background-color: hsl(210,33%,33%);
-	margin-bottom: 16px;
-}
-
-/* Common page - content */
-.page-main {
-	background-color: hsl(0,0%,97%);
-	min-height: 100%;
-	padding-left: 0;
-	padding-right: 0;
-}
-.page-main-content {
-	display: block;
-	position: relative;
-	float: left;
-	width: 100%;
-	padding-bottom: 32px;
-	min-height: 64px;
 }
 
 .page-card-holder {
