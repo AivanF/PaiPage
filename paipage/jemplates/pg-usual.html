@@ -1,0 +1,23 @@
+{% extends "_layout.html" %}
+
+{% block title %}{{ text.title }}{% endblock %}
+
+{% block page_content %}
+<div class="col-xs-12">
+	{% if upper -%}
+	{% set txt = upper.get_text(lang) -%}
+	{%- if txt -%}
+	<div class="upheader"><a href="/{{ upper.url }}">
+		<span class="glyphicon glyphicon-share-alt"></span>
+		{{ txt.title }}
+	</a></div>
+	{%- endif -%}
+	{%- endif -%}
+
+	<h1>{{ text.title }}</h1>
+	<div class="page-main-content">
+		{{ text.text_full |safe }}
+	</div>
+	{% block page_down %}{% endblock %}
+</div>
+{% endblock %}

@@ -132,7 +132,7 @@ import paipage
 paipage.Configurate(
 	__name__,
 	site_name='PaiPage',
-	template_default='page.html',
+	# template_default='pg-usual',
 	language_default='en',
 	language_available=[
 		paipage.Language(

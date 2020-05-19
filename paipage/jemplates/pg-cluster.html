@@ -1,0 +1,30 @@
+{% extends "pg-usual.html" %}
+
+{% block page_down %}
+<div class="page-card-holder">
+{%- for page in children -%}
+	{% set txt = page.get_text(lang) -%}
+	{%- if txt -%}
+	<div class="page-card">
+		<!-- TODO: add link only if long text is available -->
+		<h3>
+			{%- if txt.text_full|length > 1 %}<a href="/{{ page.url }}">{% endif -%}
+			{{ txt.title }}
+			{%- if txt.text_full|length > 1 %}</a>{% endif -%}
+		</h3>
+		{{ txt.text_short |safe }}
+	</div>
+	{%- endif -%}
+{%- endfor %}
+</div>
+<script type="text/javascript">
+$(document).ready(function(){ 
+	$('.page-card-holder').masonry({
+		itemSelector: '.page-card',
+		singleMode: true,
+		isResizable: true,
+		isAnimated: false,
+	}); 
+});
+</script>
+{% endblock %}

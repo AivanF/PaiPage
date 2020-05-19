@@ -21,7 +21,7 @@ class Configurate:
 	def __init__(self,
 			settings_name,
 			site_name,
-			template_default='page.html',
+			template_default='pg-usual',
 			language_default=None,
 			language_available=None,
 			logger=None,

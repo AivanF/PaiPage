@@ -5,8 +5,7 @@
 		www.glyphicons.com Halflings set
 		https://www.w3schools.com/bootstrap/bootstrap_ref_comp_glyphs.asp
 	#}
-
-	<a href="https://github.com/AivanF/PaiPage" target="blank">
+	<a class="link-white" href="https://github.com/AivanF/PaiPage" target="blank">
 		PaiPage
 	</a>
 
@@ -18,19 +17,19 @@
 	{{ request.user.username }}
 
 	{% if request.user.is_staff %}
-	<a href="/adminka/structure">
+	<a class="link-white" href="/adminka/structure">
 		<span class="glyphicon glyphicon-equalizer"></span> Structure
 	</a>
 	{% endif %}
 
 	{% if request.user.is_superuser %}
-	<a href="/admin/">
+	<a class="link-white" href="/admin/">
 		<span class="glyphicon glyphicon-th-list"></span> Database
 	</a>
 	{% endif %}
 
 	{# TODO: JS onclick to make "next" = current page #}
-	<a href="/admin/logout/?next=/">
+	<a class="link-white" href="/admin/logout/?next=/">
 		<span class="glyphicon glyphicon-log-out"></span> Exit
 	</a>
 </div>
@@ -46,7 +45,7 @@
 	<ul>
 	{% for key, x in config.language_available.items() -%}
 		{% if key != lang %}
-		<li><a href="/_lang/{{ key }}?next={{ request.path }}">
+		<li><a class="link-white" href="/_lang/{{ key }}?next={{ request.path }}">
 			{{ x.strings['name'] }}
 		</a></li>
 		{%- endif %}

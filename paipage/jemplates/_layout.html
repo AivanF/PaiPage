@@ -10,9 +10,15 @@
 	{%- endif -%}
 
 	{%- if txt -%}
-	<li><a href="/{{ page.url }}">
+	<li>
+		{% if page.pk != current.pk -%}
+		<a class="link-white" href="/{{ page.url }}">
+		{%- endif -%}
 		<span class="glyphicon glyphicon-chevron-{{ direction }}"></span> {{ txt.title }}
-	</a></li>
+		{%- if page.pk != current.pk -%}
+		</a>
+		{%- endif %}
+</li>
 	{%- endif %}
 {%- endmacro %}
 
@@ -24,16 +30,15 @@
 {# Table of content #}
 <div class="col-xs-2 menu-left">
 	<div class="col-xs-12 text-center menu-left-header">
-		<h3>{{ config.site_name }}</h3>
+		<a class="link-white" href="/"><h3>{{ config.site_name }}</h3></a>
 	</div>
 
 	<div class="col-xs-12 menu-left-content">
 		<ul>
-			{% if upper -%}
+			{# {% if upper -%}
 			{{ pageli(upper, lang, True) }}
-			{%- endif -%}
-
-			{%- for page in children -%}
+			{%- endif -%} #}
+			{%- for page in sections -%}
 			{{ pageli(page, lang) }}
 			{%- endfor %}
 		</ul>
@@ -44,12 +49,6 @@
 
 {# Page data #}
 <div class="col-xs-10 page-main">
-	<div id="blind">
-		<div class="blind-inner col-xs-12 text-center">
-			<div class="loader"></div>
-		</div>
-	</div>
-
-	{% block body_content %}{% endblock %}
-</div><!-- col-xs-10 page-main -->
+	{% block page_content %}{% endblock %}
+</div>
 {% endblock %}

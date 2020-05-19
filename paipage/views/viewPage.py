@@ -21,6 +21,11 @@ class PageView(View):
 		if page is None:
 			raise Http404
 
+		root = Page.objects.filter(url=PATH_INDEX).first()
+		if root is None:
+			config.logger.error(f'No root page found! Create a page for url "{PATH_INDEX}"')
+			raise ValueError('')
+
 		text = page.get_text(params['lang'])
 		if text is None:
 			config.logger.error(f'No lang "{lang}" for page "{path}"')
@@ -28,8 +33,10 @@ class PageView(View):
 			raise Http404
 
 		params.update({
+			'sections': list(root.children.all()),
+			'current': page,
 			'text': text,
 			'upper': page.upper,
 			'children': list(page.children.all()),
 		})
-		return render(request, 'page.html', params)
+		return render(request, f'{page.template}.html', params)
