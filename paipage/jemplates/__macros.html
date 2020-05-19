@@ -14,6 +14,7 @@
 {%- endmacro %}
 
 {% macro lang_select() -%}
+	{% if config.language_available |length > 1 -%}
 	<div class="col-xs-12">
 		{{ strings['languages'] }}:
 	</div>
@@ -27,4 +28,5 @@
 		{%- endif %}
 	{%- endfor %}
 	</ul>
+	{%- endif %}
 {%- endmacro %}

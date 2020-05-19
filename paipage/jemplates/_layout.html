@@ -13,12 +13,12 @@
 	{% endif %}
 	{{ request.user.username }}
 
-	<a class="link-white" href="/admin/">
+	<a href="/admin/">
 		<span class="glyphicon glyphicon-th-list"></span> База данных
 	</a>
 
 	{# TODO: JS onclick to make "next" = current page #}
-	<a class="link-white" href="/admin/logout/?next=/">
+	<a href="/admin/logout/?next=/">
 		<span class="glyphicon glyphicon-log-out"></span> Выход
 	</a>
 </div>

@@ -12,6 +12,7 @@ REQUIRED_STRINGS = (
 	'languages',  # lang selection menu
 	'error404',  # for bad URLs
 	'errorNoLang',  # for pages with no text in current lang
+	'back',  # "Back" link
 )
 
 config = None

@@ -14,6 +14,13 @@ html, body {
 	background-color: #444444;
 	color: white;
 }
+.admin-bar > a {
+	color: white;
+}
+.admin-bar > a:hover {
+	color: #cccccc;
+	text-decoration: underline;
+}
 
 /* Common page - left menu */
 .menu-left {

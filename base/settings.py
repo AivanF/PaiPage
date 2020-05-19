@@ -142,6 +142,7 @@ paipage.Configurate(
 				languages='Other languages',
 				error404='Not found',
 				errorNoLang='Not available in this language',
+				back='Back',
 			),
 		),
 		paipage.Language(
@@ -151,6 +152,7 @@ paipage.Configurate(
 				languages='Другие языки',
 				error404='Не найдено',
 				errorNoLang='Не доступно на этом языке',
+				back='Назад',
 			),
 		),
 	],
