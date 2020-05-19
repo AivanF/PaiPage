@@ -8,8 +8,11 @@ from django.urls import path, include
 from . import views
 
 urlpatterns = [
-	path('adminka/', views.PageView.as_view()),
 	path('', views.PageView.as_view()),
 	path('<slug:path>', views.PageView.as_view()),
 	path('_lang/<slug:lang>', views.ChangeLangView.as_view()),
+
+	path('adminka/structure', views.StructureView.as_view()),
+	path('adminka/create', views.EditView.as_view()),
+	path('adminka/edit/<slug:path>', views.EditView.as_view()),
 ]
