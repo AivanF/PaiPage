@@ -6,7 +6,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.http import Http404
 
-from paipage import config, LANG_NO
+from paipage import config
+from paipage.const import LANG_NO
 
 __all__ = [
 	'Page',

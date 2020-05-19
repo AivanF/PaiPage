@@ -5,7 +5,8 @@ __contact__ = 'projects@aivanf.com'
 from django.shortcuts import redirect
 from django.views import View
 
-from paipage import config, LANG_KEY
+from paipage import config
+from paipage.const import LANG_KEY
 from paipage.models import Page
 
 

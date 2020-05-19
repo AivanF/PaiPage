@@ -1,28 +1,25 @@
 {% extends "_basic.html" %}
 {% import "__macros.html" as macros with context %}
 
+{% macro pageli(page, lang, upper=False) -%}
+	{% set txt = page.get_text(lang) -%}
+	{% if upper -%}
+		{% set direction = "left" -%}
+	{% else -%}
+		{% set direction = "right" -%}
+	{%- endif -%}
+
+	{%- if txt -%}
+	<li><a href="/{{ page.url }}">
+		<span class="glyphicon glyphicon-chevron-{{ direction }}"></span> {{ txt.title }}
+	</a></li>
+	{%- endif %}
+{%- endmacro %}
+
+
 {% block content %}
-
 {# Admin header #}
-{% if request.user.is_authenticated %}
-<div class="col-xs-12 admin-bar">
-	{% if request.user.is_staff %}
-	<span class="glyphicon glyphicon-lock"></span>
-	{% else %}
-	<span class="glyphicon glyphicon-user"></span>
-	{% endif %}
-	{{ request.user.username }}
-
-	<a href="/admin/">
-		<span class="glyphicon glyphicon-th-list"></span> База данных
-	</a>
-
-	{# TODO: JS onclick to make "next" = current page #}
-	<a href="/admin/logout/?next=/">
-		<span class="glyphicon glyphicon-log-out"></span> Выход
-	</a>
-</div>
-{% endif %}
+{{ macros.adminka() }}
 
 {# Table of content #}
 <div class="col-xs-2 menu-left">
@@ -31,21 +28,17 @@
 	</div>
 
 	<div class="col-xs-12 menu-left-content">
-		{#
-			www.glyphicons.com Halflings set
-			https://www.w3schools.com/bootstrap/bootstrap_ref_comp_glyphs.asp
-		#}
 		<ul>
 			{% if upper -%}
-			{{ macros.pageli(upper, lang, True) }}
+			{{ pageli(upper, lang, True) }}
 			{%- endif -%}
 
 			{%- for page in children -%}
-			{{ macros.pageli(page, lang) }}
+			{{ pageli(page, lang) }}
 			{%- endfor %}
 		</ul>
 
-		{{ macros.lang_select() }}
+		{{ macros.lang_list() }}
 	</div>
 </div>
 

@@ -1,19 +1,43 @@
-{% macro pageli(page, lang, upper=False) -%}
-	{% set txt = page.get_text(lang) -%}
-	{% if upper -%}
-		{% set direction = "left" -%}
-	{% else -%}
-		{% set direction = "right" -%}
-	{%- endif -%}
+{% macro adminka() -%}
+{% if request.user.is_authenticated -%}
+<div class="col-xs-12 admin-bar">
+	{#
+		www.glyphicons.com Halflings set
+		https://www.w3schools.com/bootstrap/bootstrap_ref_comp_glyphs.asp
+	#}
 
-	{%- if txt -%}
-	<li><a href="/{{ page.url }}">
-		<span class="glyphicon glyphicon-chevron-{{ direction }}"></span> {{ txt.title }}
-	</a></li>
-	{%- endif %}
+	<a href="https://github.com/AivanF/PaiPage" target="blank">
+		PaiPage
+	</a>
+
+	{% if request.user.is_staff %}
+	<span class="glyphicon glyphicon-lock"></span>
+	{% else %}
+	<span class="glyphicon glyphicon-user"></span>
+	{% endif %}
+	{{ request.user.username }}
+
+	{% if request.user.is_staff %}
+	<a href="/adminka/structure">
+		<span class="glyphicon glyphicon-equalizer"></span> Structure
+	</a>
+	{% endif %}
+
+	{% if request.user.is_superuser %}
+	<a href="/admin/">
+		<span class="glyphicon glyphicon-th-list"></span> Database
+	</a>
+	{% endif %}
+
+	{# TODO: JS onclick to make "next" = current page #}
+	<a href="/admin/logout/?next=/">
+		<span class="glyphicon glyphicon-log-out"></span> Exit
+	</a>
+</div>
+{%- endif %}
 {%- endmacro %}
 
-{% macro lang_select() -%}
+{% macro lang_list() -%}
 	{% if config.language_available |length > 1 -%}
 	<div class="col-xs-12">
 		{{ strings['languages'] }}:

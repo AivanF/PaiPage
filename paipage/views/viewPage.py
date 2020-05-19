@@ -2,16 +2,17 @@ __author__ = 'AivanF'
 __copyright__ = 'Copyright 2020, AivanF'
 __contact__ = 'projects@aivanf.com'
 
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 from django.views import View
 from django.http import Http404
 
-from paipage import config, LANG_KEY
+from paipage import config
+from paipage.const import PATH_INDEX, LANG_KEY
 from paipage.models import Page
 
 
 class PageView(View):
-	def get(self, request, path='index'):
+	def get(self, request, path=PATH_INDEX):
 		lang = None
 		if LANG_KEY in request.session:
 			lang = request.session[LANG_KEY]

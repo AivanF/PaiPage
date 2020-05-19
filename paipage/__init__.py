@@ -4,16 +4,7 @@ __contact__ = 'projects@aivanf.com'
 
 import os, sys
 
-# TODO: move to `const`
-LANG_NO = '_'
-LANG_KEY = 'lang'
-REQUIRED_STRINGS = (
-	'name',  # lang name
-	'languages',  # lang selection menu
-	'error404',  # for bad URLs
-	'errorNoLang',  # for pages with no text in current lang
-	'back',  # "Back" link
-)
+from .const import REQUIRED_STRINGS
 
 config = None
 
