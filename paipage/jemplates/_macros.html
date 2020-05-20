@@ -54,6 +54,20 @@
 	{%- endif %}
 {%- endmacro %}
 
+{% macro page_card(page) -%}
+{% set txt = page.get_text(lang) -%}
+{%- if txt -%}
+<div class="page-card">
+	<h3>
+		{%- if txt.text_full|length > 1 %}<a href="/{{ page.url }}">{% endif -%}
+		{{ txt.title }}
+		{%- if txt.text_full|length > 1 %}</a>{% endif -%}
+	</h3>
+	{{ txt.text_short |safe }}
+</div>
+{%- endif -%}
+{%- endmacro %}
+
 {% macro powered_by() -%}
 <div class="col-xs-12 paipage-footer">
 	Powered by PaiPage

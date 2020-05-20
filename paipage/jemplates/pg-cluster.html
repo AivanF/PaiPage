@@ -1,21 +1,11 @@
 {% extends "pg-usual.html" %}
+{% import "_macros.html" as macros with context %}
 
 {% block page_content %}
 {{ super() }}
 <div class="page-card-holder">
 {%- for page in children -%}
-	{% set txt = page.get_text(lang) -%}
-	{%- if txt -%}
-	<div class="page-card">
-		<!-- TODO: add link only if long text is available -->
-		<h3>
-			{%- if txt.text_full|length > 1 %}<a href="/{{ page.url }}">{% endif -%}
-			{{ txt.title }}
-			{%- if txt.text_full|length > 1 %}</a>{% endif -%}
-		</h3>
-		{{ txt.text_short |safe }}
-	</div>
-	{%- endif -%}
+	{{ macros.page_card(page) }}
 {%- endfor %}
 </div>
 <script type="text/javascript">
