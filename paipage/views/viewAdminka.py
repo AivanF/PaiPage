@@ -8,17 +8,14 @@ from django.views import View
 from paipage import config
 from paipage.models import Page
 
-from .viewUtils import prepare_params
+from .viewUtils import Params
 
 
+# TODO: check user is_staff
 class StructureView(View):
 	def get(self, request):
-		params = prepare_params(request)
-		print(list(Page.objects.all()))
-		return render(request, 'am-struct.html', params)
-
-
-class EditView(View):
-	def get(self, request, path=None):
-		print('EditView')
-		pass
+		params = Params(request)
+		params['layout_template'] = 'lo-pure.html'
+		params.scripted['all_pages'] = Page.get_all()
+		params.scripted['language_selectable'] =list(config.language_available.keys())
+		return render(request, 'am-struct.html', params.prepare())

@@ -10,12 +10,12 @@ from paipage import config
 from paipage.const import PATH_INDEX, HTML_EXT
 from paipage.models import Page
 
-from .viewUtils import prepare_params
+from .viewUtils import Params
 
 
 class PageView(View):
 	def get(self, request, path=PATH_INDEX):
-		params = prepare_params(request)
+		params = Params(request)
 		lang = params['lang']
 
 		page = Page.objects.filter(url=path).first()
@@ -45,4 +45,4 @@ class PageView(View):
 			'children': list(page.children.all()),
 			'layout_template': layout,
 		})
-		return render(request, template, params)
+		return render(request, template, params.prepare())

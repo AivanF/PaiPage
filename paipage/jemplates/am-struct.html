@@ -2,9 +2,93 @@
 
 {% block title %}Website structure{% endblock %}
 
-{% block body_content %}
-<div class="col-xs-12">
+{% block meta %}
+{{ super() }}
+<style type="text/css">
+	.page-main {
+		border-radius: 16px;
+		border: 1px solid black;
+	}
+	.record {
+		padding-top: 4px;
+		padding-left: 14px;
+		border-left: 2px dashed DarkGray;
+	}
+	.clickable:hover, .clickable.selected {
+		text-decoration: underline;
+		cursor: pointer;
+	}
+	.clickable:hover {
+		background: rgba(255,255,63,0.3);
+	}
+	.clickable.selected {
+		background: rgba(127,255,63,0.3);
+	}
+	.clickable:hover ~ .record, .selected ~ .record {
+		background: rgba(0,95,191,0.1);
+	}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="page-main col-xs-12 col-md-6">
 	<h1>Website structure</h1>
-	To be continued...
+	<div class="page-main-content">
+		<div id="structure"></div>
+	</div>
 </div>
+<div class="page-main col-xs-12 col-md-6">
+	<h3>Page editor</h3>
+	<div id="editor">Editor</div>
+</div>
+<script type="text/javascript">
+const $structure = $('#structure');
+const roots = [];
+function cleanSelected() {
+	$('.selected').removeClass('selected');
+}
+function initStruct() {
+	Object.keys(all_pages).forEach(function(pk) {
+		let page = all_pages[pk];
+		if (page.upper) {
+			let upper = all_pages[page.upper];
+			if (!upper.children) upper.children = [];
+			upper.children.push(pk);
+		} else {
+			roots.push(pk);
+		}
+	});
+}
+function buildSection(keys, shift) {
+	let result = '';
+	// TODO: order pages / use specified order
+	keys.forEach(function (pk) {
+		let page = all_pages[pk];
+		result += '<div class="record">';
+		result += `<span class="clickable"><b>/${page.url}</b></span>`;
+		if (page.lang_no) {
+			// TODO: add hint
+			result += ' (*)';
+		} else {
+			// TODO: add red color if not all
+			result += ` (${page.langs.length}/${language_selectable.length})`;
+			// TODO: add hint:
+			//`${page.langs.length} of ${language_selectable.length} langs`;
+		}
+		result += ` Page: "${page.template_page}"`;
+		result += ` LayOut: "${page.template_layout}"`;
+		if (page.children) {
+			result += buildSection(page.children, shift+1);
+		}
+		result += '</div>';
+	});
+	return result;
+}
+function buildStruct() {
+	$structure.html(buildSection(roots, 0));
+}
+initStruct();
+buildStruct();
+// TODO: add url args, history
+</script>
 {% endblock %}

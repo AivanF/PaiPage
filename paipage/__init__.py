@@ -28,6 +28,8 @@ class Configurate:
 			logger=None,
 			):
 		global config
+		if config is not None:
+			raise ValueError(f'PaiPage config collision')
 		config = self
 
 		assert isinstance(site_name, str) and len(site_name) > 0

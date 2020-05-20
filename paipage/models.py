@@ -2,6 +2,8 @@ __author__ = 'AivanF'
 __copyright__ = 'Copyright 2020, AivanF'
 __contact__ = 'projects@aivanf.com'
 
+import cachetools
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.http import Http404
@@ -45,12 +47,35 @@ class Page(models.Model):
 		else:
 			return None
 
+	@classmethod
+	@cachetools.cached(cache=cachetools.TTLCache(maxsize=8, ttl=10))
+	def get_all(cls):
+		result = {
+			p.pk: {
+				'pk': p.pk,
+				'url': p.url,
+				'public': p.public,
+				'template_page': p.template,
+				'template_layout': p.layout,
+				'upper': p.upper.pk if p.upper else None,
+				'langs': [],
+				'lang_no': False,
+			} for p in Page.objects.all()
+		}
+		for t in PageText.objects.all():
+			if t.language == LANG_NO:
+				result[t.page.pk]['lang_no'] = True
+			else:
+				result[t.page.pk]['langs'].append(t.language)
+		return result
+
 	def __str__(self):
 		return repr(self)
 
 	def __repr__(self):
-		res = f'{self.pk}. Page "{self.url}" {self.created.strftime(dater)}'
-		return res
+		result = f'{self.pk}. Page "{self.url}" {self.updated.strftime(dater)}'\
+			f' langs: {self.texts.count()}'
+		return result
 
 
 language_choices = [(LANG_NO, 'NoLang')] + [

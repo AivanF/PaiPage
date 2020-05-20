@@ -13,6 +13,4 @@ urlpatterns = [
 	path('_lang/<slug:lang>', views.ChangeLangView.as_view()),
 
 	path('adminka/structure', views.StructureView.as_view()),
-	path('adminka/create', views.EditView.as_view()),
-	path('adminka/edit/<slug:path>', views.EditView.as_view()),
 ]

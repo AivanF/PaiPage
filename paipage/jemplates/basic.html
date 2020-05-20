@@ -16,6 +16,11 @@
 	{% block meta %}{% endblock %}
 </head>
 <body>
+<script type="text/javascript">
+	{% for key, value in scripted.items() -%}
+	const {{ key }} = {{ value|safe }};
+	{%- endfor %}
+</script>
 <div class="container-fluid">
 	{% block content %}{% endblock %}
 </div><!-- container-fluid -->

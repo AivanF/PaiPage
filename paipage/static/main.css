@@ -56,3 +56,19 @@ a.link-white:hover {
 	width: calc(50% - 20px);
 }
 } /* Medium */
+
+
+/* Common page - content */
+.page-main {
+	background-color: hsl(0,0%,97%);
+	min-height: 64px;
+}
+.page-main-content {
+	display: block;
+	float: left;
+	position: relative;
+	width: 100%;
+	padding-bottom: 32px;
+	min-height: 64px;
+}
+

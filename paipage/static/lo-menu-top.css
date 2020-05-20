@@ -31,19 +31,3 @@
 	color: hsl(210,33%,80%);
 	text-decoration: underline;
 }
-
-/* Common page - content */
-.page-main {
-	background-color: hsl(0,0%,97%);
-	min-height: 64px;
-	padding-left: 0;
-	padding-right: 0;
-}
-.page-main-content {
-	display: block;
-	float: left;
-	position: relative;
-	width: 100%;
-	padding-bottom: 32px;
-	min-height: 64px;
-}
