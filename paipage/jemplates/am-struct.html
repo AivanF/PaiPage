@@ -1,4 +1,4 @@
-{% extends layout_template %}
+{% extends "am-lo.html" %}
 
 {% block title %}Website structure{% endblock %}
 
@@ -27,6 +27,10 @@
 	.clickable:hover ~ .record, .selected ~ .record {
 		background: rgba(0,95,191,0.1);
 	}
+	.editor-button-box {
+		margin-top: 8px;
+		text-align: right;
+	}
 </style>
 <script src="/static/paf.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
@@ -51,7 +55,9 @@
 <script type="text/javascript">
 const $structure = $('#structure');
 const roots = [];
+let editing_page = null;
 const PREFIX_EDITOR = 'form-editor-';
+const $blind = $('#blind');
 
 const formPage = PAF.preprocessForm({
 	parts: [
@@ -109,25 +115,41 @@ const formPage = PAF.preprocessForm({
 	// },
 });
 
-PAF.addCustomType('page', {
+PAF.addCustomSelectable('page', {
 	view: function (found, value) {
 		if (found) {
 			let page = all_pages[value];
 			return `<span class="clickable" onclick="clickRecord(${page.pk})">${page.url}</span>`
 		}
-	}
+	},
+	validate: function (part, value) {
+		if (editing_page.pk == value) {
+			return 'Cannot link page to itself!';
+		}
+		let initial_pk = value;
+		while (true) {
+			let page = all_pages[value];
+			if (!page) break;  // finish
+			value = page.upper;
+			if (value == initial_pk) break;  // prevent looping
+			if (editing_page.pk == value) {
+				return 'Cannot link page to its child!';
+			}
+		}
+	},
 });
 PAF.addCustomType('pages', {
 	view: function (part, value) {
-	if (value.length > 0) {
-		let result = '';
-		value.forEach(function (pk) {
-			let page = all_pages[pk];
-			result += `<span class="clickable" onclick="clickRecord(${page.pk})">${page.url}</span> `;
-		});
-		return result;
-	}
-}});
+		if (value.length > 0) {
+			let result = '';
+			value.forEach(function (pk) {
+				let page = all_pages[pk];
+				result += `<span class="clickable" onclick="clickRecord(${page.pk})">${page.url}</span> `;
+			});
+			return result;
+		}
+	},
+});
 PAF.addCustomType('slug', {
 	view: PAF.PartViewHandlers['str'],
 	edit: PAF.PartEditHandlers['str'],
@@ -142,18 +164,49 @@ PAF.addCustomType('slug', {
 
 function savePageEdit(pk) {
 	let form = PAF.validateForm(formPage, PREFIX_EDITOR, false);
+	if (!form)
+		return;
 	console.log('validate', form);
+
+	$blind.show();
+	$.ajax({
+		url: `/adminka/page/${editing_page.pk}`,
+		method: 'POST',
+		data: JSON.stringify(form),
+		contentType: 'application/json',
+		dataType: 'json',
+		crossDomain: true
+	}).done(function (data, textStatus, jqXHR) {
+		if (data.success) {
+			alert('Saved!');
+			all_pages[editing_page.pk] = Object.assign(all_pages[editing_page.pk], form);
+			buildStruct();
+			clickRecord(editing_page.pk)
+		} else {
+			alert(`Error: ${data.comment}`);
+		}
+	}).fail(function (jqXHR, textStatus, errorThrown) {
+		console.error('Error!', textStatus, errorThrown, jqXHR);
+	}).always(function () {
+		$blind.hide();
+	});
 }
 function buildPageEdit(pk) {
-	let result = PAF.buildFormEdit(formPage, all_pages[pk], PREFIX_EDITOR, false);
-	result += `<br><span class="clickable" onclick="savePageEdit(${pk});">Save</span>`;
+	editing_page = all_pages[pk];
+	let result = PAF.buildFormEdit(formPage, editing_page, PREFIX_EDITOR, false);
+	result += `<div class="editor-button-box"><span class="clickable" onclick="savePageEdit(${pk});">Save</span></div>`;
+	result += `<div class="editor-button-box"><span class="clickable" onclick="clickRecord(${pk});">Cancel</span></div`;
 	$('#editor').html(result);
 	PAF.updateEditor();
 }
 function buildPageView(pk) {
-	let result = PAF.buildFormView(formPage, all_pages[pk]);
-	result += `<br><span class="clickable" onclick="buildPageEdit(${pk});">Edit</span>`;
+	editing_page = null;
+	let page = all_pages[pk];
+	let result = PAF.buildFormView(formPage, page);
+	result += `<div class="editor-button-box"><span class="clickable" onclick="buildPageEdit(${pk});">Edit</span></div>`;
+	result += `<div class="editor-button-box"><span class="clickable" onclick="window.location.href = '/${page.url}';">Visit</span></div>`;
 	$('#editor').html(result);
+	$(`#page-${pk}`).addClass('selected');
 }
 function cleanSelected() {
 	$('.selected').removeClass('selected');

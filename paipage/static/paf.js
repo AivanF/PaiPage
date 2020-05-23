@@ -105,10 +105,10 @@ function findSelecting(ar, key) {
 
 
 
-const SelectablesViewHandlers = {};
-Container.SelectablesViewHandlers = SelectablesViewHandlers;
 const PartViewHandlers = {};
 Container.PartViewHandlers = PartViewHandlers;
+const SelectablesViewHandlers = {};
+Container.SelectablesViewHandlers = SelectablesViewHandlers;
 
 PartViewHandlers['int'] = function (part, value) {
 	return `${value}`;
@@ -346,10 +346,15 @@ Container.extractForm = function(form, prefix, is_creation) {
 
 const PartValidateHandlers = {};
 Container.PartValidateHandlers = PartValidateHandlers;
+const SelectablesValidateHandlers = {};
+Container.SelectablesValidateHandlers = SelectablesValidateHandlers;
 
 PartValidateHandlers['select'] = function (part, value) {
 	if (!exists(value) && !part.allow_clear)
-		return 'Value not selected!';
+		return 'Value not selected!';	
+	if (SelectablesValidateHandlers[part.subtype]) {
+		return SelectablesValidateHandlers[part.subtype](part, value);
+	}
 }
 PartValidateHandlers['slug'] = function (part, value) {
 	if (! /^[-a-zA-Z0-9]+$/.test(value)) {
@@ -393,18 +398,33 @@ Container.validateForm = function(form, prefix, is_creation) {
 
 Container.addCustomType = function (type, obj) {
 	if (exists(obj.view)) {
+		// function (part, value)
 		PartViewHandlers[type] = obj.view;
 	}
 	if (exists(obj.edit)) {
+		// function (ind, part, value)
 		PartEditHandlers[type] = obj.edit;
 	}
 	if (exists(obj.extract)) {
+		// function (ind, part)
 		PartExtractHandlers[type] = obj.extract;
 	}
 	if (exists(obj.validate)) {
+		// function (part, value)
 		PartValidateHandlers[type] = obj.validate;
 	}
 }
+Container.addCustomSelectable = function (subtype, obj) {
+	if (exists(obj.view)) {
+		// function (found, value)
+		SelectablesViewHandlers[subtype] = obj.view;
+	}
+	if (exists(obj.validate)) {
+		// function (part, value)
+		SelectablesValidateHandlers[subtype] = obj.validate;
+	}
+}
+
 // TODO: int, bool, date
 
 return Container;
