@@ -28,6 +28,11 @@
 		background: rgba(0,95,191,0.1);
 	}
 </style>
+<script src="/static/paf.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker3.css"/>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
 {% endblock %}
 
 {% block page_content %}
@@ -38,42 +43,142 @@
 	</div>
 </div>
 <div class="page-main col-xs-12 col-md-6">
-	<h3>Page editor</h3>
-	<div id="editor">Editor</div>
+	<h3>Page info</h3>
+	<div class="page-main-content">
+		<div id="editor">Select a page</div>
+	</div>
 </div>
 <script type="text/javascript">
 const $structure = $('#structure');
 const roots = [];
+const PREFIX_EDITOR = 'form-editor-';
+
+const formPage = PAF.preprocessForm({
+	parts: [
+		{
+			type: 'slug',
+			code: 'url',
+			name: 'Address',
+			max_len: '250',
+			desc: '',
+		// }, {
+		// 	type: 'bool',
+		// 	code: 'public',
+		// 	on: 'yes',
+		// 	off: 'no',
+		// 	default: true,
+		}, {
+			type: 'select',
+			subtype: 'page',
+			allow_clear: true,
+			code: 'upper',
+			name: 'Upper page',
+		}, {
+			type: 'select',
+			subtype: 'template_layout',
+			empty_option: `Default (${default_layout})`,
+			allow_clear: true,
+			code: 'template_layout',
+			name: 'Layout template',
+		}, {
+			type: 'select',
+			subtype: 'template_page',
+			empty_option: `Default (${default_page})`,
+			allow_clear: true,
+			code: 'template_page',
+			name: 'Page template',
+		}, {
+			type: 'pages',
+			code: 'children',
+			name: 'Children pages',
+			hideCreate: true,
+			hideEdit: true,
+		}, {
+			type: 'str2str',
+			code: 'titles',
+			name: 'Titles',
+			hideCreate: true,
+			hideEdit: true,
+		},
+	],
+	type: 'page',
+	// method: 'dep',
+	// created: function (data) {
+	// 	current_tp = TP_DEP;
+	// 	current_pk = data.store[0].pk;
+	// },
+});
+
+PAF.addCustomType('page', {
+	view: function (found, value) {
+		if (found) {
+			let page = all_pages[value];
+			return `<span class="clickable" onclick="clickRecord(${page.pk})">${page.url}</span>`
+		}
+	}
+});
+PAF.addCustomType('pages', {
+	view: function (part, value) {
+	if (value.length > 0) {
+		let result = '';
+		value.forEach(function (pk) {
+			let page = all_pages[pk];
+			result += `<span class="clickable" onclick="clickRecord(${page.pk})">${page.url}</span> `;
+		});
+		return result;
+	}
+}});
+PAF.addCustomType('slug', {
+	view: PAF.PartViewHandlers['str'],
+	edit: PAF.PartEditHandlers['str'],
+	extract: PAF.PartExtractHandlers['str'],
+	validate: function (part, value) {
+		if (! /^[-a-zA-Z0-9]+$/.test(value)) {
+			return 'Bad address characters!';
+		}
+	},
+});
+
+
+function savePageEdit(pk) {
+	let form = PAF.validateForm(formPage, PREFIX_EDITOR, false);
+	console.log('validate', form);
+}
+function buildPageEdit(pk) {
+	let result = PAF.buildFormEdit(formPage, all_pages[pk], PREFIX_EDITOR, false);
+	result += `<br><span class="clickable" onclick="savePageEdit(${pk});">Save</span>`;
+	$('#editor').html(result);
+	PAF.updateEditor();
+}
+function buildPageView(pk) {
+	let result = PAF.buildFormView(formPage, all_pages[pk]);
+	result += `<br><span class="clickable" onclick="buildPageEdit(${pk});">Edit</span>`;
+	$('#editor').html(result);
+}
 function cleanSelected() {
 	$('.selected').removeClass('selected');
 }
-function initStruct() {
-	Object.keys(all_pages).forEach(function(pk) {
-		let page = all_pages[pk];
-		if (page.upper) {
-			let upper = all_pages[page.upper];
-			if (!upper.children) upper.children = [];
-			upper.children.push(pk);
-		} else {
-			roots.push(pk);
-		}
-	});
+function clickRecord(pk) {
+	cleanSelected();
+	buildPageView(pk);
 }
+
+
 function buildSection(keys, shift) {
 	let result = '';
 	// TODO: order pages / use specified order
 	keys.forEach(function (pk) {
 		let page = all_pages[pk];
 		result += '<div class="record">';
-		result += `<span class="clickable"><b>/${page.url}</b></span>`;
+		result += `<span id="page-${pk}" class="clickable" onclick="event.stopPropagation(); clickRecord(${pk});"><b>/${page.url}</b></span>`;
 		if (page.lang_no) {
 			// TODO: add hint
 			result += ' (*)';
 		} else {
 			// TODO: add red color if not all
-			result += ` (${page.langs.length}/${language_selectable.length})`;
+			result += ` (${Object.keys(page.titles).length}/${language_selectable.length})`;
 			// TODO: add hint:
-			//`${page.langs.length} of ${language_selectable.length} langs`;
+			//`Texts: ${Object.keys(page.titles).length} of ${language_selectable.length} languagess`;
 		}
 		result += ` Page: "${page.template_page}"`;
 		result += ` LayOut: "${page.template_layout}"`;
@@ -85,9 +190,26 @@ function buildSection(keys, shift) {
 	return result;
 }
 function buildStruct() {
+	roots.length = 0;
+	selectables['page'] = [];
+	Object.keys(all_pages).forEach(function(pk) {
+		let page = all_pages[pk];
+		page.children = [];
+		selectables['page'].push([pk, page.url]);
+	});
+	Object.keys(all_pages).forEach(function(pk) {
+		let page = all_pages[pk];
+		if (page.upper) {
+			let upper = all_pages[page.upper];
+			if (!upper.children) upper.children = [];
+			upper.children.push(pk);
+		} else {
+			roots.push(pk);
+		}
+	});
 	$structure.html(buildSection(roots, 0));
 }
-initStruct();
+
 buildStruct();
 // TODO: add url args, history
 </script>

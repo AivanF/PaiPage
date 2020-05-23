@@ -60,6 +60,7 @@ class Page(models.Model):
 				'upper': p.upper.pk if p.upper else None,
 				'langs': [],
 				'lang_no': False,
+				'titles': {},
 			} for p in Page.objects.all()
 		}
 		for t in PageText.objects.all():
@@ -67,6 +68,7 @@ class Page(models.Model):
 				result[t.page.pk]['lang_no'] = True
 			else:
 				result[t.page.pk]['langs'].append(t.language)
+			result[t.page.pk]['titles'][t.language] = t.title
 		return result
 
 	def __str__(self):

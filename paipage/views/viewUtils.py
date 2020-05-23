@@ -30,9 +30,9 @@ class Params():
 			'current': None,
 			'sections': list(root.children.all()),
 			'layout_template': config.template_layout_default + HTML_EXT,
-			'scripted': {},
 		}
-		self.scripted = {}
+		self.selectables = {}
+		self.scripted = {'selectables': self.selectables}
 
 	def __setitem__(self, key, item):
 		self.params[key] = item
@@ -44,9 +44,7 @@ class Params():
 		self.params.update(adict)
 
 	def prepare(self):
+		self.params['scripted'] = {}
 		for key in list(self.scripted.keys()):
-			val = self.scripted[key]
-			if not isinstance(val, str):
-				self.scripted[key] = json.dumps(val)
-		self.params['scripted'] = self.scripted
+			self.params['scripted'][key] = json.dumps(self.scripted[key])
 		return self.params

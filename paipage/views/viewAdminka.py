@@ -17,5 +17,9 @@ class StructureView(View):
 		params = Params(request)
 		params['layout_template'] = 'lo-pure.html'
 		params.scripted['all_pages'] = Page.get_all()
-		params.scripted['language_selectable'] =list(config.language_available.keys())
+		params.scripted['language_selectable'] = list(config.language_available.keys())
+		params.scripted['default_page'] = config.template_page_default
+		params.scripted['default_layout'] = config.template_layout_default
+		params.selectables['template_layout'] = ['lo-pure', 'lo-menu-left', 'lo-menu-top']
+		params.selectables['template_page'] = ['pg-pure', 'pg-usual', 'pg-cluster']
 		return render(request, 'am-struct.html', params.prepare())
