@@ -60,7 +60,7 @@ const PREFIX_EDITOR = 'form-editor-';
 const $blind = $('#blind');
 
 const formPage = PAF.preprocessForm({
-	parts: [
+	elements: [
 		{
 			type: 'slug',
 			code: 'url',
@@ -115,6 +115,24 @@ const formPage = PAF.preprocessForm({
 	// },
 });
 
+
+function checkNotChild(initial_pk, compared_pk) {
+	let current_pk = initial_pk;
+	if (compared_pk == current_pk) {
+		return false;
+	}
+	while (true) {
+		let page = all_pages[current_pk];
+		if (!page) break;  // finish
+		current_pk = page.upper;
+		if (current_pk == initial_pk) break;  // prevent looping
+		if (compared_pk == current_pk) {
+			return false;
+		}
+	}
+	return true;
+}
+
 PAF.addCustomSelectable('page', {
 	view: function (found, value) {
 		if (found) {
@@ -122,24 +140,21 @@ PAF.addCustomSelectable('page', {
 			return `<span class="clickable" onclick="clickRecord(${page.pk})">${page.url}</span>`
 		}
 	},
-	validate: function (part, value) {
-		if (editing_page.pk == value) {
+	options: function (element, options) {
+		return options.filter(function (pair) {
+			return checkNotChild(pair[0], editing_page.pk);
+		});
+	},
+	validate: function (element, initial_pk) {
+		if (editing_page.pk == initial_pk) {
 			return 'Cannot link page to itself!';
 		}
-		let initial_pk = value;
-		while (true) {
-			let page = all_pages[value];
-			if (!page) break;  // finish
-			value = page.upper;
-			if (value == initial_pk) break;  // prevent looping
-			if (editing_page.pk == value) {
-				return 'Cannot link page to its child!';
-			}
-		}
+		if (!checkNotChild(initial_pk, editing_page.pk))
+			return 'Cannot link page to its child!';
 	},
 });
 PAF.addCustomType('pages', {
-	view: function (part, value) {
+	view: function (element, value) {
 		if (value.length > 0) {
 			let result = '';
 			value.forEach(function (pk) {
@@ -151,10 +166,10 @@ PAF.addCustomType('pages', {
 	},
 });
 PAF.addCustomType('slug', {
-	view: PAF.PartViewHandlers['str'],
-	edit: PAF.PartEditHandlers['str'],
-	extract: PAF.PartExtractHandlers['str'],
-	validate: function (part, value) {
+	view: PAF.ElementViewHandlers['str'],
+	edit: PAF.ElementEditHandlers['str'],
+	extract: PAF.ElementExtractHandlers['str'],
+	validate: function (element, value) {
 		if (! /^[-a-zA-Z0-9]+$/.test(value)) {
 			return 'Bad address characters!';
 		}
@@ -204,6 +219,7 @@ function buildPageView(pk) {
 	let page = all_pages[pk];
 	let result = PAF.buildFormView(formPage, page);
 	result += `<div class="editor-button-box"><span class="clickable" onclick="buildPageEdit(${pk});">Edit</span></div>`;
+	result += `<div class="editor-button-box"><span class="clickable" onclick="window.location.href = '/adminka/page/${page.pk}';">Texts</span></div>`;
 	result += `<div class="editor-button-box"><span class="clickable" onclick="window.location.href = '/${page.url}';">Visit</span></div>`;
 	$('#editor').html(result);
 	$(`#page-${pk}`).addClass('selected');

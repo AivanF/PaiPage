@@ -9,20 +9,31 @@
 ;const PAF = function($) {
 const version = 'PAF.js 2020.05.23';
 console.log(version);
+/*
+Reqired window variables:
+	`selectables` for `select` element type.
+*/
 
 const Container = {};
 
 Container.Forms = {};
 Container.preprocessForm = function(form) {
 	form.codes = {};
-	form.parts.forEach(function (part) {
+	let order = [];
+	form.elements.forEach(function (element) {
 		// Must have:
-		if (!(part.type && part.code && part.name)) {
-			console.error('Got bad form part', part);
+		if (!(element.type && element.code && element.name)) {
+			console.error('Got bad form element', element);
+		}
+		if (!form.codes[element.code]) {
+			order.push(element.code);
 		}
 		// May have: hideCreate, hideEdit, subtype, etc.
-		form.codes[part.code] = part;
+		form.codes[element.code] = element;
 	});
+	form.elements = order.map(function (code) {
+		return form.codes[code];
+	});;
 	Container.Forms[form.type] = form;
 	return form;
 }
@@ -105,38 +116,38 @@ function findSelecting(ar, key) {
 
 
 
-const PartViewHandlers = {};
-Container.PartViewHandlers = PartViewHandlers;
+const ElementViewHandlers = {};
+Container.ElementViewHandlers = ElementViewHandlers;
 const SelectablesViewHandlers = {};
 Container.SelectablesViewHandlers = SelectablesViewHandlers;
 
-PartViewHandlers['int'] = function (part, value) {
+ElementViewHandlers['int'] = function (element, value) {
 	return `${value}`;
 };
-PartViewHandlers['str'] = function (part, value) {
+ElementViewHandlers['str'] = function (element, value) {
 	// can_copy = true;  // TODO: here!
 	return value;
 };
-PartViewHandlers['str2str'] = function (part, value) {
+ElementViewHandlers['str2str'] = function (element, value) {
 	let result = '';
 	Object.keys(value).forEach(function (key) {
 		result += `<br><i>${key}:</i> ${value[key]}`;
 	});
 	return result;
 };
-PartViewHandlers['bool'] = function (part, value) {
+ElementViewHandlers['bool'] = function (element, value) {
 	return `${value}`;
 };
-PartViewHandlers['select'] = function (part, value) {
-	if (!selectables[part.subtype]) {
-		console.error(`Missing selectables for "${part.subtype}" subtype`);
+ElementViewHandlers['select'] = function (element, value) {
+	if (!selectables[element.subtype]) {
+		console.error(`Missing selectables for "${element.subtype}" subtype`);
 		return;
 	}
-	let found = findSelecting(selectables[part.subtype], value);
-	if (SelectablesViewHandlers[part.subtype]) {
-		return SelectablesViewHandlers[part.subtype](found, value);
+	let found = findSelecting(selectables[element.subtype], value);
+	if (SelectablesViewHandlers[element.subtype]) {
+		return SelectablesViewHandlers[element.subtype](found, value);
 	} else {
-		let empty_option = part.empty_option || '';
+		let empty_option = element.empty_option || '';
 		if (found == null || found == '') {
 			return empty_option;
 		} else {
@@ -147,14 +158,14 @@ PartViewHandlers['select'] = function (part, value) {
 
 Container.buildFormView = function(form, obj) {
 	let result = '';
-	form.parts.forEach(function(part) {
-		if (!PartViewHandlers[part.type]) {
-			console.error(`Missing PartViewHandlers for "${part.type}" type`);
+	form.elements.forEach(function(element) {
+		if (!ElementViewHandlers[element.type]) {
+			console.error(`Missing ElementViewHandlers for "${element.type}" type`);
 			return;
 		}
-		let value = PartViewHandlers[part.type](part, obj[part.code]);
+		let value = ElementViewHandlers[element.type](element, obj[element.code]);
 		if (exists(value))
-			result += `<b>${part.name}:</b> ${value}<br>`;
+			result += `<b>${element.name}:</b> ${value}<br>`;
 	});
 	return result;
 }
@@ -231,10 +242,12 @@ function makeAlert(text, ind, style) {
 
 
 
-const PartEditHandlers = {};
-Container.PartEditHandlers = PartEditHandlers;
+const ElementEditHandlers = {};
+Container.ElementEditHandlers = ElementEditHandlers;
+const SelectablesOptionsHandlers = {};
+Container.SelectablesOptionsHandlers = SelectablesOptionsHandlers;
 
-PartEditHandlers['str'] = function (ind, part, value) {
+ElementEditHandlers['str'] = function (ind, element, value) {
 	let result = '';
 	result += `<input type="text" id="${ind}"`;
 	let cur_val = null;
@@ -242,52 +255,55 @@ PartEditHandlers['str'] = function (ind, part, value) {
 		cur_val = value.toString();
 	}
 	if (cur_val) {
-		if (part.max_len) {
-			cur_val = cur_val.slice(0, part.max_len);
+		if (element.max_len) {
+			cur_val = cur_val.slice(0, element.max_len);
 		}
 		result += ' value="' + escapeHtml(cur_val) + '"';
 	}
 	let cls = 'form-control edit-element-text';
-	if (part.max_len) {
-		result += ' maxlength="' + part.max_len + '"';
-		result += ` onkeyup="PAF.textCounter('${ind}', ${part.max_len});"`;
-		result += ` onfocus="PAF.textCounter('${ind}', ${part.max_len});"`;
+	if (element.max_len) {
+		result += ' maxlength="' + element.max_len + '"';
+		result += ` onkeyup="PAF.textCounter('${ind}', ${element.max_len});"`;
+		result += ` onfocus="PAF.textCounter('${ind}', ${element.max_len});"`;
 		result += ' data-toggle="tooltip" title="Печатай!"';
 		cls += ' tooltipped';
 	}
 	result += ' class="' + cls + '">';
 	return result;
 }
-PartEditHandlers['select'] = function (ind, part, value) {
+ElementEditHandlers['select'] = function (ind, element, value) {
 	// value, multiple, get_value, get_label, error_text, allow_clear
-	const options = selectables[part.subtype];
+	let options = selectables[element.subtype];
+	if (SelectablesOptionsHandlers[element.subtype]) {
+		options = SelectablesOptionsHandlers[element.subtype](element, options);
+	}
 	return makeSelect(ind, options, {
 		value: value,
 		multiple: false,
-		allow_clear: part.allow_clear,
-		empty_option: part.empty_option,
+		allow_clear: element.allow_clear,
+		empty_option: element.empty_option,
 	});
 }
 
 Container.buildFormEdit = function (form, obj, prefix, is_creation) {
 	prefix = prefix || '';
 	let result = '';
-	form.parts.forEach(function(part) {
+	form.elements.forEach(function(element) {
 		let hide = false;
 		if (is_creation)
-			hide = ifUndefined(part.hideCreate, false);
+			hide = ifUndefined(element.hideCreate, false);
 		else
-			hide = ifUndefined(part.hideEdit, false);
+			hide = ifUndefined(element.hideEdit, false);
 		if (hide) return;
-		if (!PartEditHandlers[part.type]) {
-			console.error(`Missing PartEditHandlers for "${part.type}" type`);
+		if (!ElementEditHandlers[element.type]) {
+			console.error(`Missing ElementEditHandlers for "${element.type}" type`);
 			return;
 		}
-		const ind = prefix + part.code;
-		const value = PartEditHandlers[part.type](ind, part, obj[part.code]);
+		const ind = prefix + element.code;
+		const value = ElementEditHandlers[element.type](ind, element, obj[element.code]);
 		if (exists(value)) {
-			result += '<div class="form-part">';
-			result += `<b>${part.name}:</b> ${value}<br>`;
+			result += '<div class="form-element">';
+			result += `<b>${element.name}:</b> ${value}<br>`;
 			result += makeAlert('', ind + '-alert', 'display: none;');
 			result += '</div>';
 		}
@@ -303,60 +319,60 @@ Container.updateEditor = function () {
 
 
 
-const PartExtractHandlers = {};
-Container.PartExtractHandlers = PartExtractHandlers;
+const ElementExtractHandlers = {};
+Container.ElementExtractHandlers = ElementExtractHandlers;
 
-PartExtractHandlers['int'] = function (ind, part) {
+ElementExtractHandlers['int'] = function (ind, element) {
 	return parseInt($('#' + ind).val());
 }
-PartExtractHandlers['str'] = function (ind, part) {
+ElementExtractHandlers['str'] = function (ind, element) {
 	return $('#' + ind).val();
 }
-PartExtractHandlers['select'] = function (ind, part) {
+ElementExtractHandlers['select'] = function (ind, element) {
 	let result = $('#' + ind).val();
 	if (result === SELECT_NULL)
 		result = null;
 	return result;
 }
-PartExtractHandlers['const'] = function (ind, part) {
-	return part.value;
+ElementExtractHandlers['const'] = function (ind, element) {
+	return element.value;
 }
 
 Container.extractForm = function(form, prefix, is_creation) {
 	let result = {};
 	prefix = prefix || '';
-	form.parts.forEach(function(part) {
+	form.elements.forEach(function(element) {
 		let hide = false;
 		if (is_creation)
-			hide = ifUndefined(part.hideCreate, false);
+			hide = ifUndefined(element.hideCreate, false);
 		else
-			hide = ifUndefined(part.hideEdit, false);
+			hide = ifUndefined(element.hideEdit, false);
 		if (hide) return;
-		if (!PartExtractHandlers[part.type]) {
-			console.error(`Missing PartExtractHandlers for "${part.type}" type`);
+		if (!ElementExtractHandlers[element.type]) {
+			console.error(`Missing ElementExtractHandlers for "${element.type}" type`);
 			return;
 		}
-		const ind = prefix + part.code;
-		result[part.code] = PartExtractHandlers[part.type](ind, part);
+		const ind = prefix + element.code;
+		result[element.code] = ElementExtractHandlers[element.type](ind, element);
 	});
 	return result;
 }
 
 
 
-const PartValidateHandlers = {};
-Container.PartValidateHandlers = PartValidateHandlers;
+const ElementValidateHandlers = {};
+Container.ElementValidateHandlers = ElementValidateHandlers;
 const SelectablesValidateHandlers = {};
 Container.SelectablesValidateHandlers = SelectablesValidateHandlers;
 
-PartValidateHandlers['select'] = function (part, value) {
-	if (!exists(value) && !part.allow_clear)
+ElementValidateHandlers['select'] = function (element, value) {
+	if (!exists(value) && !element.allow_clear)
 		return 'Value not selected!';	
-	if (SelectablesValidateHandlers[part.subtype]) {
-		return SelectablesValidateHandlers[part.subtype](part, value);
+	if (SelectablesValidateHandlers[element.subtype]) {
+		return SelectablesValidateHandlers[element.subtype](element, value);
 	}
 }
-PartValidateHandlers['slug'] = function (part, value) {
+ElementValidateHandlers['slug'] = function (element, value) {
 	if (! /^[-a-zA-Z0-9]+$/.test(value)) {
 		return 'Bad address characters!';
 	}
@@ -366,20 +382,20 @@ Container.validateForm = function(form, prefix, is_creation) {
 	let values = Container.extractForm(form, prefix, is_creation);
 	let fine = true;
 	prefix = prefix || '';
-	form.parts.forEach(function(part) {
+	form.elements.forEach(function(element) {
 		let hide = false;
 		if (is_creation)
-			hide = ifUndefined(part.hideCreate, false);
+			hide = ifUndefined(element.hideCreate, false);
 		else
-			hide = ifUndefined(part.hideEdit, false);
+			hide = ifUndefined(element.hideEdit, false);
 		if (hide) return;
-		if (!PartValidateHandlers[part.type]) {
-			console.error(`Missing PartValidateHandlers for "${part.type}" type`);
+		if (!ElementValidateHandlers[element.type]) {
+			console.error(`Missing ElementValidateHandlers for "${element.type}" type`);
 			return;
 		}
-		const ind = prefix + part.code;
-		const value = values[part.code];
-		const comment = PartValidateHandlers[part.type](part, value);
+		const ind = prefix + element.code;
+		const value = values[element.code];
+		const comment = ElementValidateHandlers[element.type](element, value);
 		const $alert = $('#' + ind + '-alert');
 		if (exists(comment)) {
 			fine = false;
@@ -398,20 +414,20 @@ Container.validateForm = function(form, prefix, is_creation) {
 
 Container.addCustomType = function (type, obj) {
 	if (exists(obj.view)) {
-		// function (part, value)
-		PartViewHandlers[type] = obj.view;
+		// function (element, value)
+		ElementViewHandlers[type] = obj.view;
 	}
 	if (exists(obj.edit)) {
-		// function (ind, part, value)
-		PartEditHandlers[type] = obj.edit;
+		// function (ind, element, value)
+		ElementEditHandlers[type] = obj.edit;
 	}
 	if (exists(obj.extract)) {
-		// function (ind, part)
-		PartExtractHandlers[type] = obj.extract;
+		// function (ind, element)
+		ElementExtractHandlers[type] = obj.extract;
 	}
 	if (exists(obj.validate)) {
-		// function (part, value)
-		PartValidateHandlers[type] = obj.validate;
+		// function (element, value)
+		ElementValidateHandlers[type] = obj.validate;
 	}
 }
 Container.addCustomSelectable = function (subtype, obj) {
@@ -419,8 +435,12 @@ Container.addCustomSelectable = function (subtype, obj) {
 		// function (found, value)
 		SelectablesViewHandlers[subtype] = obj.view;
 	}
+	if (exists(obj.options)) {
+		// function (element, options)
+		SelectablesOptionsHandlers[subtype] = obj.options;
+	}
 	if (exists(obj.validate)) {
-		// function (part, value)
+		// function (element, value)
 		SelectablesValidateHandlers[subtype] = obj.validate;
 	}
 }
