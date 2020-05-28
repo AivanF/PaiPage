@@ -47,17 +47,22 @@ class Page(models.Model):
 		else:
 			return None
 
+	def as_dict(self):
+		return {
+			'pk': self.pk,
+			'url': self.url,
+			'public': self.public,
+			'template_page': self.template,
+			'template_layout': self.layout,
+			'upper': self.upper.pk if self.upper else None,
+		}
+
 	@classmethod
 	@cachetools.cached(cache=cachetools.TTLCache(maxsize=8, ttl=10))
 	def get_all(cls):
 		result = {
 			p.pk: {
-				'pk': p.pk,
-				'url': p.url,
-				'public': p.public,
-				'template_page': p.template,
-				'template_layout': p.layout,
-				'upper': p.upper.pk if p.upper else None,
+				**p.as_dict(),
 				'langs': [],
 				'lang_no': False,
 				'titles': {},
@@ -105,6 +110,16 @@ class PageText(models.Model):
 
 	class Meta:
 		unique_together = ('page', 'language',)
+
+	def as_dict(self):
+		return {
+			'language': self.language,
+			'title': self.title,
+			'keywords': self.keywords,
+			'description': self.description,
+			'text_short': self.text_short,
+			'text_full': self.text_full,
+		}
 
 	def __str__(self):
 		return repr(self)

@@ -56,7 +56,7 @@
 const $structure = $('#structure');
 const roots = [];
 let editing_page = null;
-const PREFIX_EDITOR = 'form-editor-';
+const PREFIX_PAGE_EDITOR = 'form-pg-edit-';
 const $blind = $('#blind');
 
 const formPage = PAF.preprocessForm({
@@ -194,7 +194,7 @@ PAF.addCustomType('slug', {
 
 
 function savePageEdit(pk) {
-	let form = PAF.validateForm(formPage, PREFIX_EDITOR, false);
+	let form = PAF.validateForm(formPage, PREFIX_PAGE_EDITOR, false);
 	if (!form)
 		return;
 
@@ -223,7 +223,7 @@ function savePageEdit(pk) {
 }
 function buildPageEdit(pk) {
 	editing_page = all_pages[pk];
-	let result = PAF.buildFormEdit(formPage, editing_page, PREFIX_EDITOR, false);
+	let result = PAF.buildFormEdit(formPage, editing_page, PREFIX_PAGE_EDITOR, false);
 	result += `<div class="editor-button-box"><span class="clickable" onclick="savePageEdit(${pk});">Save</span></div>`;
 	result += `<div class="editor-button-box"><span class="clickable" onclick="clickRecord(${pk});">Cancel</span></div`;
 	$('#editor').html(result);

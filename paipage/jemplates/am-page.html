@@ -1,0 +1,285 @@
+{% extends "am-lo.html" %}
+
+{% block title %}Texts edit{% endblock %}
+
+{% block meta %}
+{{ super() }}
+<script src="/static/paf.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker3.css"/>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+{% endblock %}
+
+{% block page_content %}
+<div class="page-main col-xs-12">
+	<h1>Texts edit</h1>
+	<div class="page-main-content">
+		<div id="controls"></div>
+	</div>
+</div>
+<div id="preview" class="page-main col-xs-12" style="display: none;">
+	ToDo: page preview
+</div>
+<script type="text/javascript">
+const $controls = $('#controls');
+const $preview = $('#preview');
+const roots = [];
+let editing_lang = null;
+let is_view = true;
+const PREFIX_PAGE_EDITOR = 'form-pg-edit-';
+const PREFIX_TEXT_EDITOR = 'form-tx-edit-';
+const $blind = $('#blind');
+const LANG_NO = '_';
+
+const formPage = PAF.preprocessForm({
+	elements: [
+		{
+			type: 'slug',
+			code: 'url',
+			name: 'Address',
+			max_len: '250',
+		// }, {
+		// 	type: 'bool',
+		// 	code: 'public',
+		// 	on: 'yes',
+		// 	off: 'no',
+		// 	default: true,
+		}, {
+			type: 'select',
+			subtype: 'page',
+			allow_clear: true,
+			code: 'upper',
+			name: 'Upper page',
+		}, {
+			type: 'select',
+			subtype: 'template_layout',
+			empty_option: `Default (${default_layout})`,
+			allow_clear: true,
+			code: 'template_layout',
+			name: 'Layout template',
+		}, {
+			type: 'select',
+			subtype: 'template_page',
+			empty_option: `Default (${default_page})`,
+			allow_clear: true,
+			code: 'template_page',
+			name: 'Page template',
+		},
+	],
+	type: 'page',
+	// method: 'dep',
+	// created: function (data) {
+	// 	current_tp = TP_DEP;
+	// 	current_pk = data.store[0].pk;
+	// },
+});
+
+const formText = PAF.preprocessForm({
+	elements: [
+		{
+		// TODO: add const page id, lang key
+		// 	type: 'const',
+		// 	code: 'page',
+		// }, {
+			type: 'select',
+			subtype: 'language',
+			allow_clear: false,
+			code: 'language',
+			name: 'Language',
+		}, {
+			type: 'str',
+			code: 'title',
+			name: 'Title',
+			max_len: '128',
+		}, {
+			type: 'str',
+			code: 'keywords',
+			name: 'Keywords',
+			desc: 'Comma-separated words for search-engines',
+		}, {
+			type: 'str',
+			long: true,
+			code: 'description',
+			name: 'Description',
+			desc: 'Short description to be used by search-engines and social media previews',
+		}, {
+			type: 'str',
+			long: true,
+			code: 'text_short',
+			name: 'Short text',
+			desc: 'To be shown on other website pages. May be empty',
+		}, {
+			type: 'str',
+			long: true,
+			code: 'text_full',
+			name: 'Full text',
+			desc: 'Page main content',
+		},
+	],
+	type: 'text',
+});
+
+
+function checkNotChild(initial_pk, compared_pk) {
+	let current_pk = initial_pk;
+	if (compared_pk == current_pk) {
+		return false;
+	}
+	while (true) {
+		let page = all_pages[current_pk];
+		if (!page) break;  // finish
+		current_pk = page.upper;
+		if (current_pk == initial_pk) break;  // prevent looping
+		if (compared_pk == current_pk) {
+			return false;
+		}
+	}
+	return true;
+}
+
+PAF.addCustomSelectable('page', {
+	view: function (found, value) {
+		if (found) {
+			let page = all_pages[value];
+			return `<span class="clickable" onclick="clickRecord(${page.pk})">${page.url}</span>`
+		}
+	},
+	options: function (element, options) {
+		return options.filter(function (pair) {
+			return checkNotChild(pair[0], editing_page.pk);
+		});
+	},
+	validate: function (element, initial_pk) {
+		if (editing_page.pk == initial_pk) {
+			return 'Cannot link page to itself!';
+		}
+		if (!checkNotChild(initial_pk, editing_page.pk))
+			return 'Cannot link page to its child!';
+	},
+});
+PAF.addCustomSelectable('template_page', {
+	extract: function (element, value) {
+		if (value == null)
+			return '';
+		else
+			return value;
+	},
+});
+PAF.addCustomSelectable('template_layout', {
+	extract: function (element, value) {
+		if (value == null)
+			return '';
+		else
+			return value;
+	},
+});
+// TODO: language + options filteer
+PAF.addCustomType('pages', {
+	view: function (element, value) {
+		if (value.length > 0) {
+			let result = '';
+			value.forEach(function (pk) {
+				let page = all_pages[pk];
+				result += `<span class="clickable" onclick="clickRecord(${page.pk})">${page.url}</span> `;
+			});
+			return result;
+		}
+	},
+});
+PAF.addCustomType('slug', {
+	view: PAF.ElementViewHandlers['str'],
+	edit: PAF.ElementEditHandlers['str'],
+	extract: PAF.ElementExtractHandlers['str'],
+	validate: function (element, value) {
+		if (! /^[-a-zA-Z0-9]+$/.test(value)) {
+			return 'Bad address characters!';
+		}
+	},
+});
+
+
+function viewText(lang) {
+	editing_lang = lang;
+	is_view = true;
+	buildEditor();
+}
+
+function editText(lang) {
+	editing_lang = lang;
+	is_view = false;
+	buildEditor();
+}
+
+function closeText() {
+	if (!is_view) {
+		// TODO: ask if sure
+	}
+	editing_lang = null;
+	buildEditor();
+}
+
+function buildEditor() {
+	let result = '';
+
+	if (editing_lang == null) {
+		result += `
+			<div class="col-xs-12 col-md-6">
+			${PAF.buildFormView(formPage, the_page)}
+			</div>
+		`;
+
+		result += `<div class="col-xs-12 col-md-6">`;
+		result += `Texts:`;
+		language_selectable.forEach(function (lang) {
+			result += `<br><i>${lang}:</i> `;
+			if (texts[lang]) {
+				result += `
+					"${texts[lang].title}"
+					<button type="button" class="btn btn-primary"
+						onclick="viewText('${lang}')">Open text</button>
+				`;
+			} else {
+				result += `
+					none
+					<button type="button" class="btn btn-success"
+						onclick="editText('${lang}')">Add text</button>
+				`;
+			}
+		});
+		result += `</div>`;
+	} else {
+		// TODO: build form to view&edit or create
+		result += `<div class="col-xs-12">`;
+		if (is_view) {
+			result += `
+				<div class="col-xs-12">
+				${PAF.buildFormView(formText, texts[editing_lang])}
+				<br>
+				<button type="button" class="btn btn-success"
+					onclick="editText('${editing_lang}')">Edit text</button>
+				<button type="button" class="btn btn-primary"
+					onclick="closeText()">Close text</button>
+				</div>
+			`;
+		} else {
+			result += `
+				<div class="col-xs-12">
+				${PAF.buildFormEdit(formText, texts[editing_lang])}
+				<br>
+				<button type="button" class="btn btn-success"
+					onclick="saveText()">Save text</button>
+				<button type="button" class="btn btn-warning"
+					onclick="closeText()">Close text</button>
+				</div>
+			`;
+		}
+	}
+
+	$controls.html(result);
+	PAF.updateEditor();
+}
+buildEditor();
+// TODO: add url args, history
+</script>
+{% endblock %}

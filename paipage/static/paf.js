@@ -28,7 +28,7 @@ Container.preprocessForm = function(form) {
 		if (!form.codes[element.code]) {
 			order.push(element.code);
 		}
-		// May have: hideCreate, hideEdit, subtype, etc.
+		// May have: desc, hideCreate, hideEdit, subtype, etc.
 		form.codes[element.code] = element;
 	});
 	form.elements = order.map(function (code) {
@@ -249,6 +249,7 @@ Container.SelectablesOptionsHandlers = SelectablesOptionsHandlers;
 
 ElementEditHandlers['str'] = function (ind, element, value) {
 	let result = '';
+	// TODO: if element.long then use <textarea>
 	result += `<input type="text" id="${ind}"`;
 	let cur_val = null;
 	if (typeof value === 'number' || typeof value === 'string') {
@@ -299,13 +300,19 @@ Container.buildFormEdit = function (form, obj, prefix, is_creation) {
 			console.error(`Missing ElementEditHandlers for "${element.type}" type`);
 			return;
 		}
-		const ind = prefix + element.code;
-		const value = ElementEditHandlers[element.type](ind, element, obj[element.code]);
-		if (exists(value)) {
-			result += '<div class="form-element">';
-			result += `<b>${element.name}:</b> ${value}<br>`;
-			result += makeAlert('', ind + '-alert', 'display: none;');
-			result += '</div>';
+		try {
+			const ind = prefix + element.code;
+			const old_value = obj ? obj[element.code] : undefined;
+			const value = ElementEditHandlers[element.type](ind, element, old_value);
+			if (exists(value)) {
+				result += '<div class="form-element">';
+				result += `<b>${element.name}:</b> ${value}<br>`;
+				result += makeAlert('', ind + '-alert', 'display: none;');
+				result += '</div>';
+			}
+		} catch (er) {
+			console.error('PAF.buildFormEdit error on', element);
+			console.error(er);
 		}
 	});
 	return result;
@@ -450,7 +457,9 @@ Container.addCustomSelectable = function (subtype, obj) {
 	}
 }
 
-// TODO: int, bool, date
+// TODO: int, bool, date types
+// TODO: const value as a function
+// TODO: show description `desc` if exists
 
 return Container;
 }(jQuery);
