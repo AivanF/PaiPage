@@ -153,6 +153,22 @@ PAF.addCustomSelectable('page', {
 			return 'Cannot link page to its child!';
 	},
 });
+PAF.addCustomSelectable('template_page', {
+	extract: function (element, value) {
+		if (value == null)
+			return '';
+		else
+			return value;
+	},
+});
+PAF.addCustomSelectable('template_layout', {
+	extract: function (element, value) {
+		if (value == null)
+			return '';
+		else
+			return value;
+	},
+});
 PAF.addCustomType('pages', {
 	view: function (element, value) {
 		if (value.length > 0) {
@@ -181,7 +197,6 @@ function savePageEdit(pk) {
 	let form = PAF.validateForm(formPage, PREFIX_EDITOR, false);
 	if (!form)
 		return;
-	console.log('validate', form);
 
 	$blind.show();
 	$.ajax({

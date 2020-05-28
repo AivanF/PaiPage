@@ -321,6 +321,8 @@ Container.updateEditor = function () {
 
 const ElementExtractHandlers = {};
 Container.ElementExtractHandlers = ElementExtractHandlers;
+const SelectablesExtractHandlers = {};
+Container.SelectablesExtractHandlers = SelectablesExtractHandlers;
 
 ElementExtractHandlers['int'] = function (ind, element) {
 	return parseInt($('#' + ind).val());
@@ -329,10 +331,14 @@ ElementExtractHandlers['str'] = function (ind, element) {
 	return $('#' + ind).val();
 }
 ElementExtractHandlers['select'] = function (ind, element) {
-	let result = $('#' + ind).val();
-	if (result === SELECT_NULL)
-		result = null;
-	return result;
+	let value = $('#' + ind).val();
+	if (value === SELECT_NULL)
+		value = null;
+	if (SelectablesExtractHandlers[element.subtype]) {
+		return SelectablesExtractHandlers[element.subtype](element, value);
+	} else {
+		return value;
+	}
 }
 ElementExtractHandlers['const'] = function (ind, element) {
 	return element.value;
@@ -370,11 +376,6 @@ ElementValidateHandlers['select'] = function (element, value) {
 		return 'Value not selected!';	
 	if (SelectablesValidateHandlers[element.subtype]) {
 		return SelectablesValidateHandlers[element.subtype](element, value);
-	}
-}
-ElementValidateHandlers['slug'] = function (element, value) {
-	if (! /^[-a-zA-Z0-9]+$/.test(value)) {
-		return 'Bad address characters!';
 	}
 }
 
@@ -438,6 +439,10 @@ Container.addCustomSelectable = function (subtype, obj) {
 	if (exists(obj.options)) {
 		// function (element, options)
 		SelectablesOptionsHandlers[subtype] = obj.options;
+	}
+	if (exists(obj.extract)) {
+		// function (element, value)
+		SelectablesExtractHandlers[subtype] = obj.extract;
 	}
 	if (exists(obj.validate)) {
 		// function (element, value)
