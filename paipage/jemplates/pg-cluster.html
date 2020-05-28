@@ -1,21 +1,39 @@
-{% extends "pg-usual.html" %}
+{% extends layout_template %}
 {% import "_macros.html" as macros with context %}
 
+{% block title %}{{ text.title }}{% endblock %}
+
 {% block page_content %}
-{{ super() }}
-<div class="page-card-holder">
-{%- for page in children -%}
-	{{ macros.page_card(page) }}
-{%- endfor %}
-</div>
-<script type="text/javascript">
-$(document).ready(function(){ 
-	$('.page-card-holder').masonry({
-		itemSelector: '.page-card',
-		singleMode: true,
-		isResizable: true,
-		isAnimated: false,
-	}); 
-});
-</script>
+	{% if upper -%}
+	{% set txt = upper.get_text(lang) -%}
+	{%- if txt -%}
+	<div class="upheader"><a href="/{{ upper.url }}">
+		<span class="glyphicon glyphicon-share-alt"></span>
+		{{ txt.title }}
+	</a></div>
+	{%- endif -%}
+	{%- endif -%}
+	<h1>{{ text.title }}</h1>
+
+	<div class="page-main-content">
+		{{ text.text_full |safe }}
+
+		<br><br>
+
+		<div class="page-card-holder">
+		{%- for page in children -%}
+			{{ macros.page_card(page) }}
+		{%- endfor %}
+		</div>
+		<script type="text/javascript">
+		$(document).ready(function(){ 
+			$('.page-card-holder').masonry({
+				itemSelector: '.page-card',
+				singleMode: true,
+				isResizable: true,
+				isAnimated: false,
+			}); 
+		});
+		</script>
+	</div>
 {% endblock %}

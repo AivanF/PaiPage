@@ -19,7 +19,7 @@
 <script type="text/javascript">
 	{% for key, value in scripted.items() -%}
 	const {{ key }} = {{ value|safe }};
-	{%- endfor %}
+	{% endfor %}
 
 	{# https://docs.djangoproject.com/en/2.0/ref/csrf/ #}
 	{# https://stackoverflow.com/a/5107878/5308802 #}
