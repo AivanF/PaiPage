@@ -49,9 +49,12 @@ class AdminkaPageView(View):
 		return render(request, 'am-page.html', params.prepare())
 
 	@method_decorator(staff_member_required)
-	def post(self, request, pk):
+	def post(self, request, pk=-1):
 		j = json.loads(request.body.decode('utf-8'))
-		page = get_object_or_404(Page, pk=pk)
+		if pk == -1:
+			page = Page(created_by=request.user)
+		else:
+			page = get_object_or_404(Page, pk=pk)
 
 		res = {
 			'success': True,
@@ -100,6 +103,7 @@ class AdminkaPageView(View):
 		if res['success']:
 			page.updated_by = request.user
 			page.save()
+			res['obj'] = page.as_dict()
 
 		return HttpResponse(json.dumps(res))
 

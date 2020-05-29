@@ -55,18 +55,17 @@ class Page(models.Model):
 			'template_page': self.template,
 			'template_layout': self.layout,
 			'upper': self.upper.pk if self.upper else None,
+
+			'langs': [],
+			'lang_no': False,
+			'titles': {},
 		}
 
 	@classmethod
 	@cachetools.cached(cache=cachetools.TTLCache(maxsize=8, ttl=10))
 	def get_all(cls):
 		result = {
-			p.pk: {
-				**p.as_dict(),
-				'langs': [],
-				'lang_no': False,
-				'titles': {},
-			} for p in Page.objects.all()
+			p.pk: p.as_dict() for p in Page.objects.all()
 		}
 		for t in PageText.objects.all():
 			if t.language == LANG_NO:

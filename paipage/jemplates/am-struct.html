@@ -14,9 +14,13 @@
 		padding-left: 14px;
 		border-left: 2px dashed DarkGray;
 	}
+	.clickable {
+		color: black;
+	}
 	.clickable:hover, .clickable.selected {
 		text-decoration: underline;
 		cursor: pointer;
+		color: black;
 	}
 	.clickable:hover {
 		background: rgba(255,255,63,0.3);
@@ -28,8 +32,11 @@
 		background: rgba(0,95,191,0.1);
 	}
 	.editor-button-box {
-		margin-top: 8px;
+		display: inline-block;
+		float: right;
+		margin: 0px 8px;
 		text-align: right;
+		text-decoration: underline;
 	}
 </style>
 <script src="/static/paf.js"></script>
@@ -193,6 +200,19 @@ PAF.addCustomType('slug', {
 });
 
 
+function smallButton(text, onclick, url) {
+	if (url) {
+		return `<div class="editor-button-box">
+				<a class="clickable" href="${url}">${text}</a>
+				</div>`;
+	} else {
+		return `<div class="editor-button-box">
+				<span class="clickable" onclick="${onclick};">${text}</a>
+				</div>`;
+	}
+}
+
+
 function savePageEdit(pk) {
 	let form = PAF.validateForm(formPage, PREFIX_PAGE_EDITOR, false);
 	if (!form)
@@ -200,7 +220,7 @@ function savePageEdit(pk) {
 
 	$blind.show();
 	$.ajax({
-		url: `/adminka/page/${editing_page.pk}`,
+		url: `/adminka/page/${editing_page.pk < 0 ? 'create' : editing_page.pk}`,
 		method: 'POST',
 		data: JSON.stringify(form),
 		contentType: 'application/json',
@@ -209,7 +229,12 @@ function savePageEdit(pk) {
 	}).done(function (data, textStatus, jqXHR) {
 		if (data.success) {
 			alert('Saved!');
-			all_pages[editing_page.pk] = Object.assign(all_pages[editing_page.pk], form);
+			if (editing_page.pk < 0) {
+				all_pages[data.obj.pk] = data.obj;
+				editing_page = data.obj;
+			} else {
+				all_pages[editing_page.pk] = Object.assign(all_pages[editing_page.pk], form);
+			}
 			buildStruct();
 			clickRecord(editing_page.pk)
 		} else {
@@ -224,8 +249,19 @@ function savePageEdit(pk) {
 function buildPageEdit(pk) {
 	editing_page = all_pages[pk];
 	let result = PAF.buildFormEdit(formPage, editing_page, PREFIX_PAGE_EDITOR, false);
-	result += `<div class="editor-button-box"><span class="clickable" onclick="savePageEdit(${pk});">Save</span></div>`;
-	result += `<div class="editor-button-box"><span class="clickable" onclick="clickRecord(${pk});">Cancel</span></div`;
+	result += smallButton('Save', `savePageEdit(${pk})`);
+	result += smallButton('Cancel', `clickRecord(${pk})`);
+	$('#editor').html(result);
+	PAF.updateEditor();
+}
+function buildPageCreate(upper_pk) {
+	editing_page = {
+		pk: -1,
+		upper: upper_pk,
+	}
+	let result = PAF.buildFormEdit(formPage, editing_page, PREFIX_PAGE_EDITOR, true);
+	result += smallButton('Create', `savePageEdit()`);
+	result += smallButton('Cancel', `clickRecord(${upper_pk})`);
 	$('#editor').html(result);
 	PAF.updateEditor();
 }
@@ -233,9 +269,10 @@ function buildPageView(pk) {
 	editing_page = null;
 	let page = all_pages[pk];
 	let result = PAF.buildFormView(formPage, page);
-	result += `<div class="editor-button-box"><span class="clickable" onclick="buildPageEdit(${pk});">Edit</span></div>`;
-	result += `<div class="editor-button-box"><span class="clickable" onclick="window.location.href = '/adminka/page/${page.pk}';">Texts</span></div>`;
-	result += `<div class="editor-button-box"><span class="clickable" onclick="window.location.href = '/${page.url}';">Visit</span></div>`;
+	result += smallButton('Visit', null, `/${page.url}`);
+	result += smallButton('Add subpage', `buildPageCreate(${pk})`);
+	result += smallButton('Texts', null, `/adminka/page/${page.pk}`);
+	result += smallButton('Edit', `buildPageEdit(${pk})`);
 	$('#editor').html(result);
 	$(`#page-${pk}`).addClass('selected');
 }
@@ -294,7 +331,9 @@ function buildStruct() {
 	$structure.html(buildSection(roots, 0));
 }
 
-buildStruct();
-// TODO: add url args, history
+$(document).ready(function() {
+	buildStruct();
+	// TODO: add url args, history
+});
 </script>
 {% endblock %}
