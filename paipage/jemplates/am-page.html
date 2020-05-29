@@ -36,7 +36,7 @@
 </div>
 <div id="preview" class="page-main" style="display: none;">
 	<div class="col-xs-12 text-center"><h3><i>- Preview begin -</i></h3></div>
-	<iframe id="preview-iframe"></iframe>
+	<iframe id="preview-iframe" sandbox="allow-same-origin"></iframe>
 	<div class="col-xs-12 text-center"><h3><i>- Preview end -</i></h3></div>
 </div>
 
@@ -232,7 +232,37 @@ function saveText() {
 	if (!form)
 		return;
 
-	`/adminka/text/${the_page.pk}/${editing_lang}`
+	$blind.show();
+	$.ajax({
+		url: `/adminka/text/${the_page.pk}/${editing_lang}`,
+		method: 'POST',
+		data: JSON.stringify(form),
+		contentType: 'application/json',
+		dataType: 'json',
+		crossDomain: true
+	}).done(function (data, textStatus, jqXHR) {
+		if (data.success) {
+			alert('Saved!');
+			let old_one = texts[editing_lang];
+			if (old_one == null) {
+				old_one = {};
+			}
+			if (editing_lang == form.language) {
+				texts[editing_lang] = Object.assign(old_one, form);
+			} else {
+				texts[form.language] = Object.assign(old_one, form);
+				texts[editing_lang] = undefined;
+			}
+			editing_lang = null;
+			buildEditor();
+		} else {
+			alert(`Error: ${data.comment}`);
+		}
+	}).fail(function (jqXHR, textStatus, errorThrown) {
+		console.error('Error!', textStatus, errorThrown, jqXHR);
+	}).always(function () {
+		$blind.hide();
+	});
 }
 
 function closeText() {
@@ -268,6 +298,9 @@ function previewText() {
 			although it works fine.
 			*/
 		}
+		$preview_iframe.ready(function() {
+			$preview_iframe.contents().find('a').removeAttr('href');
+		});
 	}).fail(function (jqXHR, textStatus, errorThrown) {
 		console.error('Error!', textStatus, errorThrown, jqXHR);
 	}).always(function () {
@@ -349,7 +382,10 @@ function buildEditor() {
 	$controls.html(result);
 	PAF.updateEditor();
 }
-buildEditor();
-// TODO: add url args, history
+
+$(document).ready(function() {
+	buildEditor();
+	// TODO: add url args, history
+});
 </script>
 {% endblock %}

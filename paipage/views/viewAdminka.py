@@ -7,12 +7,13 @@ import json
 from django.shortcuts import render, get_object_or_404
 from django.views import View
 from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse
 
 from paipage import config
 from paipage.const import LANG_NO
-from paipage.models import Page
+from paipage.models import Page, PageText
 
 from .viewUtils import Params
 
@@ -30,6 +31,7 @@ class StructureView(View):
 		return render(request, 'am-struct.html', params.prepare())
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class AdminkaPageView(View):
 	@method_decorator(staff_member_required)
 	def get(self, request, pk):
@@ -51,7 +53,6 @@ class AdminkaPageView(View):
 		j = json.loads(request.body.decode('utf-8'))
 		page = get_object_or_404(Page, pk=pk)
 
-		print(page, j)
 		res = {
 			'success': True,
 			'comment': '-',
@@ -103,13 +104,37 @@ class AdminkaPageView(View):
 		return HttpResponse(json.dumps(res))
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class AdminkaPageTextView(View):
 	@method_decorator(staff_member_required)
 	def post(self, request, pk, lang):
+		# `lang` is old lang, it may be changed
 		j = json.loads(request.body.decode('utf-8'))
 		page = get_object_or_404(Page, pk=pk)
 		text = page.get_text(lang)
+
+		res = {
+			'success': True,
+			'comment': '-',
+		}
+
 		if text is None:
-			# Create new
-			pass
-		# TODO: check that new_lang == old_lang or new_lang not created yet
+			text = PageText(page=page, created_by=request.user, language=j['language'])
+		elif lang != j['language']:
+			existing = PageText.objects.filter(page=page, language=j['language']).first()
+			if existing is not None:
+				res['success'] = False
+				res['comment'] = 'Cannot replace existing text language'
+			else:
+				text.language = j['language']
+
+		if res['success']:
+			text.title = j['title']
+			text.keywords = j['keywords']
+			text.description = j['description']
+			text.text_short = j['text_short']
+			text.text_full = j['text_full']
+			text.updated_by = request.user
+			text.save()
+
+		return HttpResponse(json.dumps(res))
