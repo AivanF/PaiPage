@@ -169,9 +169,14 @@ Container.buildFormView = function(form, obj) {
 			console.error(`Missing ElementViewHandlers for "${element.type}" type`);
 			return;
 		}
-		let value = ElementViewHandlers[element.type](element, obj[element.code]);
-		if (exists(value))
-			result += `<b>${element.name}:</b> ${value}<br>`;
+		try {
+			let value = ElementViewHandlers[element.type](element, obj[element.code]);
+			if (exists(value))
+				result += `<b>${element.name}:</b> ${value}<br>`;
+		} catch (er) {
+			console.error('PAF.buildFormView error on', element);
+			console.error(er);
+		}
 	});
 	return result;
 }
