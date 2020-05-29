@@ -7,7 +7,7 @@
  * Created at 2020-05-22
  */
 ;const PAF = function($) {
-const version = 'PAF.js 2020.05.23';
+const version = 'PAF.js 2020.05.29.2';
 console.log(version);
 /*
 Reqired window variables:
@@ -22,13 +22,16 @@ Container.preprocessForm = function(form) {
 	let order = [];
 	form.elements.forEach(function (element) {
 		// Must have:
-		if (!(element.type && element.code && element.name)) {
+		if (!(
+				element.type && element.code &&
+				(element.name || (element.type == 'const'))
+			)) {
 			console.error('Got bad form element', element);
 		}
 		if (!form.codes[element.code]) {
 			order.push(element.code);
 		}
-		// May have: desc, hideCreate, hideEdit, subtype, etc.
+		// May have: desc, hideCreate, hideEdit, allow_clear, subtype, etc.
 		form.codes[element.code] = element;
 	});
 	form.elements = order.map(function (code) {
@@ -155,6 +158,9 @@ ElementViewHandlers['select'] = function (element, value) {
 		}
 	}
 };
+ElementViewHandlers['const'] = function (element, value) {
+	return null;
+};
 
 Container.buildFormView = function(form, obj) {
 	let result = '';
@@ -249,9 +255,8 @@ Container.SelectablesOptionsHandlers = SelectablesOptionsHandlers;
 
 ElementEditHandlers['str'] = function (ind, element, value) {
 	let result = '';
-	// TODO: if element.long then use <textarea>
-	result += `<input type="text" id="${ind}"`;
-	let cur_val = null;
+	let properties = '';
+	let cur_val = '';
 	if (typeof value === 'number' || typeof value === 'string') {
 		cur_val = value.toString();
 	}
@@ -259,17 +264,24 @@ ElementEditHandlers['str'] = function (ind, element, value) {
 		if (element.max_len) {
 			cur_val = cur_val.slice(0, element.max_len);
 		}
-		result += ' value="' + escapeHtml(cur_val) + '"';
 	}
 	let cls = 'form-control edit-element-text';
 	if (element.max_len) {
-		result += ' maxlength="' + element.max_len + '"';
-		result += ` onkeyup="PAF.textCounter('${ind}', ${element.max_len});"`;
-		result += ` onfocus="PAF.textCounter('${ind}', ${element.max_len});"`;
-		result += ' data-toggle="tooltip" title="Печатай!"';
+		properties += ' maxlength="' + element.max_len + '"';
+		properties += ` onkeyup="PAF.textCounter('${ind}', ${element.max_len});"`;
+		properties += ` onfocus="PAF.textCounter('${ind}', ${element.max_len});"`;
+		properties += ' data-toggle="tooltip" title="Печатай!"';
 		cls += ' tooltipped';
 	}
-	result += ' class="' + cls + '">';
+
+	if (element.long) {
+		result += `<textarea id="${ind}">${cur_val}</textarea>`;
+	} else {
+		if (cur_val) {
+			properties += ' value="' + escapeHtml(cur_val) + '"';
+		}
+		result += `<input type="text" id="${ind}" ${properties} class="${cls}">`;
+	}
 	return result;
 }
 ElementEditHandlers['select'] = function (ind, element, value) {
@@ -283,8 +295,11 @@ ElementEditHandlers['select'] = function (ind, element, value) {
 		multiple: false,
 		allow_clear: element.allow_clear,
 		empty_option: element.empty_option,
-	});
+	}) + '<br>';
 }
+ElementEditHandlers['const'] = function (ind, element, value) {
+	return null;
+};
 
 Container.buildFormEdit = function (form, obj, prefix, is_creation) {
 	prefix = prefix || '';
@@ -303,12 +318,20 @@ Container.buildFormEdit = function (form, obj, prefix, is_creation) {
 		try {
 			const ind = prefix + element.code;
 			const old_value = obj ? obj[element.code] : undefined;
-			const value = ElementEditHandlers[element.type](ind, element, old_value);
-			if (exists(value)) {
-				result += '<div class="form-element">';
-				result += `<b>${element.name}:</b> ${value}<br>`;
-				result += makeAlert('', ind + '-alert', 'display: none;');
-				result += '</div>';
+			const editor = ElementEditHandlers[element.type](ind, element, old_value);
+			if (exists(editor)) {
+				let desc = '';
+				if (element.desc) {
+					desc = `${element.desc}<br>`;
+				}
+				result += `
+					<div class="form-element">
+					<b>${element.name}</b><br>
+					${desc}
+					${editor}<br>
+					${makeAlert('', ind + '-alert', 'display: none;')}
+					</div>
+				`;
 			}
 		} catch (er) {
 			console.error('PAF.buildFormEdit error on', element);
@@ -348,7 +371,7 @@ ElementExtractHandlers['select'] = function (ind, element) {
 	}
 }
 ElementExtractHandlers['const'] = function (ind, element) {
-	return element.value;
+	return ifFunction(element.value);
 }
 
 Container.extractForm = function(form, prefix, is_creation) {
@@ -365,8 +388,17 @@ Container.extractForm = function(form, prefix, is_creation) {
 			console.error(`Missing ElementExtractHandlers for "${element.type}" type`);
 			return;
 		}
-		const ind = prefix + element.code;
-		result[element.code] = ElementExtractHandlers[element.type](ind, element);
+		try {
+			const ind = prefix + element.code;
+			result[element.code] = ElementExtractHandlers[element.type](ind, element);
+			if (!isDefined(result[element.code])) {
+				throw Error(`Got undefined for "#${ind}"`);
+			}
+		} catch (er) {
+			console.error('PAF.extractForm error on', element);
+			console.error(er);
+			return null;
+		}
 	});
 	return result;
 }
@@ -378,7 +410,26 @@ Container.ElementValidateHandlers = ElementValidateHandlers;
 const SelectablesValidateHandlers = {};
 Container.SelectablesValidateHandlers = SelectablesValidateHandlers;
 
+ElementValidateHandlers['str'] = function (element, value) {
+	if (isDefined(element.min_len)) {
+		if (value.length < element.min_len) {
+			return `Text length is ${value.length}, but min is ${element.min_len}`;
+		}
+	}
+	if (isDefined(element.max_len)) {
+		if (value.length > element.max_len) {
+			return `Text length is ${value.length}, but max is ${element.max_len}`;
+		}
+	}
+}
 ElementValidateHandlers['select'] = function (element, value) {
+	if (!exists(value) && !element.allow_clear)
+		return 'Value not selected!';	
+	if (SelectablesValidateHandlers[element.subtype]) {
+		return SelectablesValidateHandlers[element.subtype](element, value);
+	}
+}
+ElementValidateHandlers['const'] = function (element, value) {
 	if (!exists(value) && !element.allow_clear)
 		return 'Value not selected!';	
 	if (SelectablesValidateHandlers[element.subtype]) {
@@ -388,6 +439,9 @@ ElementValidateHandlers['select'] = function (element, value) {
 
 Container.validateForm = function(form, prefix, is_creation) {
 	let values = Container.extractForm(form, prefix, is_creation);
+	if (values == null) {
+		return values;
+	}
 	let fine = true;
 	prefix = prefix || '';
 	form.elements.forEach(function(element) {
@@ -401,16 +455,21 @@ Container.validateForm = function(form, prefix, is_creation) {
 			console.error(`Missing ElementValidateHandlers for "${element.type}" type`);
 			return;
 		}
-		const ind = prefix + element.code;
-		const value = values[element.code];
-		const comment = ElementValidateHandlers[element.type](element, value);
-		const $alert = $('#' + ind + '-alert');
-		if (exists(comment)) {
-			fine = false;
-			$alert.html(comment);
-			$alert.show(500);
-		} else {
-			$alert.hide(500);
+		try {
+			const ind = prefix + element.code;
+			const value = values[element.code];
+			const comment = ElementValidateHandlers[element.type](element, value);
+			const $alert = $('#' + ind + '-alert');
+			if (exists(comment)) {
+				fine = false;
+				$alert.html(comment);
+				$alert.show(500);
+			} else {
+				$alert.hide(500);
+			}
+		} catch (er) {
+			console.error('PAF.validateForm error on', element);
+			console.error(er);
 		}
 	});
 	if (fine) {
@@ -458,8 +517,6 @@ Container.addCustomSelectable = function (subtype, obj) {
 }
 
 // TODO: int, bool, date types
-// TODO: const value as a function
-// TODO: show description `desc` if exists
 
 return Container;
 }(jQuery);

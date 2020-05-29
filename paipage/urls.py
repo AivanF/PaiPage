@@ -14,5 +14,6 @@ urlpatterns = [
 
 	path('adminka/structure', views.StructureView.as_view()),
 	path('adminka/page/<int:pk>', views.AdminkaPageView.as_view()),
+	path('adminka/preview/<int:ind>', views.PagePreView.as_view()),
 	path('adminka/text/<int:pk>/<slug:lang>', views.AdminkaPageTextView.as_view()),
 ]

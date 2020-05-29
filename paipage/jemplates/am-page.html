@@ -9,6 +9,22 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker3.css"/>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<style type="text/css">
+	textarea {
+		resize: vertical;
+		width: 100%;
+		min-height: 8em;
+	}
+	#preview {
+		float: left;
+		width: 100%;
+	}
+	#preview-iframe {
+		width: 100%;
+		height: 480px;
+		border: 3px solid red;
+	}
+</style>
 {% endblock %}
 
 {% block page_content %}
@@ -18,12 +34,16 @@
 		<div id="controls"></div>
 	</div>
 </div>
-<div id="preview" class="page-main col-xs-12" style="display: none;">
-	ToDo: page preview
+<div id="preview" class="page-main" style="display: none;">
+	<div class="col-xs-12 text-center"><h3><i>- Preview begin -</i></h3></div>
+	<iframe id="preview-iframe"></iframe>
+	<div class="col-xs-12 text-center"><h3><i>- Preview end -</i></h3></div>
 </div>
+
 <script type="text/javascript">
 const $controls = $('#controls');
 const $preview = $('#preview');
+const $preview_iframe = $('#preview-iframe');
 const roots = [];
 let editing_lang = null;
 let is_view = true;
@@ -45,12 +65,12 @@ const formPage = PAF.preprocessForm({
 		// 	on: 'yes',
 		// 	off: 'no',
 		// 	default: true,
-		}, {
-			type: 'select',
-			subtype: 'page',
-			allow_clear: true,
-			code: 'upper',
-			name: 'Upper page',
+		// }, {
+		// 	type: 'select',
+		// 	subtype: 'page',
+		// 	allow_clear: true,
+		// 	code: 'upper',
+		// 	name: 'Upper page',
 		}, {
 			type: 'select',
 			subtype: 'template_layout',
@@ -78,10 +98,10 @@ const formPage = PAF.preprocessForm({
 const formText = PAF.preprocessForm({
 	elements: [
 		{
-		// TODO: add const page id, lang key
-		// 	type: 'const',
-		// 	code: 'page',
-		// }, {
+			type: 'const',
+			value: the_page.pk,
+			code: 'page',
+		}, {
 			type: 'select',
 			subtype: 'language',
 			allow_clear: false,
@@ -91,6 +111,7 @@ const formText = PAF.preprocessForm({
 			type: 'str',
 			code: 'title',
 			name: 'Title',
+			min_len: '1',
 			max_len: '128',
 		}, {
 			type: 'str',
@@ -108,7 +129,7 @@ const formText = PAF.preprocessForm({
 			long: true,
 			code: 'text_short',
 			name: 'Short text',
-			desc: 'To be shown on other website pages. May be empty',
+			desc: 'To be shown on other pages of the website. May be empty',
 		}, {
 			type: 'str',
 			long: true,
@@ -174,19 +195,6 @@ PAF.addCustomSelectable('template_layout', {
 			return value;
 	},
 });
-// TODO: language + options filteer
-PAF.addCustomType('pages', {
-	view: function (element, value) {
-		if (value.length > 0) {
-			let result = '';
-			value.forEach(function (pk) {
-				let page = all_pages[pk];
-				result += `<span class="clickable" onclick="clickRecord(${page.pk})">${page.url}</span> `;
-			});
-			return result;
-		}
-	},
-});
 PAF.addCustomType('slug', {
 	view: PAF.ElementViewHandlers['str'],
 	edit: PAF.ElementEditHandlers['str'],
@@ -195,6 +203,13 @@ PAF.addCustomType('slug', {
 		if (! /^[-a-zA-Z0-9]+$/.test(value)) {
 			return 'Bad address characters!';
 		}
+	},
+});
+PAF.addCustomSelectable('language', {
+	options: function (element, options) {
+		return options.filter(function (key) {
+			return (key == editing_lang) || (texts[key] == null);
+		});
 	},
 });
 
@@ -211,6 +226,15 @@ function editText(lang) {
 	buildEditor();
 }
 
+function saveText() {
+	// TODO: ask if sure if preview is hidden
+	let form = PAF.validateForm(formText, PREFIX_TEXT_EDITOR, false);
+	if (!form)
+		return;
+
+	`/adminka/text/${the_page.pk}/${editing_lang}`
+}
+
 function closeText() {
 	if (!is_view) {
 		// TODO: ask if sure
@@ -219,7 +243,42 @@ function closeText() {
 	buildEditor();
 }
 
+function previewText() {
+	let form = PAF.validateForm(formText, PREFIX_TEXT_EDITOR, false);
+	if (!form)
+		return;
+
+	$blind.show();
+	$preview.hide();
+	let content = form.text_full;
+	$.ajax({
+		url: `/adminka/preview/${the_page.pk}`,
+		method: 'POST',
+		data: JSON.stringify(form),
+		contentType: 'application/json',
+		dataType: 'html',
+		crossDomain: true
+	}).done(function (data, textStatus, jqXHR) {
+		$preview.show();
+		try {
+			$preview_iframe.contents().find('html').html(data);
+		} catch (er) {
+			/*
+			jQuery raises some error when builing iFrame content,
+			although it works fine.
+			*/
+		}
+	}).fail(function (jqXHR, textStatus, errorThrown) {
+		console.error('Error!', textStatus, errorThrown, jqXHR);
+	}).always(function () {
+		$blind.hide();
+	});
+
+}
+
 function buildEditor() {
+	$preview.hide();
+	$blind.hide();
 	let result = '';
 
 	if (editing_lang == null) {
@@ -230,8 +289,8 @@ function buildEditor() {
 		`;
 
 		result += `<div class="col-xs-12 col-md-6">`;
-		result += `Texts:`;
-		language_selectable.forEach(function (lang) {
+		result += `<b>Texts:</b>`;
+		function addLang(lang) {
 			result += `<br><i>${lang}:</i> `;
 			if (texts[lang]) {
 				result += `
@@ -246,7 +305,9 @@ function buildEditor() {
 						onclick="editText('${lang}')">Add text</button>
 				`;
 			}
-		});
+		}
+		language_selectable.forEach(addLang);
+		addLang(LANG_NO);
 		result += `</div>`;
 	} else {
 		// TODO: build form to view&edit or create
@@ -259,18 +320,27 @@ function buildEditor() {
 				<button type="button" class="btn btn-success"
 					onclick="editText('${editing_lang}')">Edit text</button>
 				<button type="button" class="btn btn-primary"
-					onclick="closeText()">Close text</button>
+					onclick="closeText()">Close</button>
 				</div>
 			`;
 		} else {
+			let obj = texts[editing_lang];
+			if (!obj) {
+				obj = {
+					language: editing_lang,
+				}
+			}
 			result += `
 				<div class="col-xs-12">
-				${PAF.buildFormEdit(formText, texts[editing_lang])}
+				${PAF.buildFormEdit(formText, obj,
+					PREFIX_TEXT_EDITOR, texts[editing_lang]==null)}
 				<br>
+				<button type="button" class="btn btn-primary"
+					onclick="previewText()">Preview page</button>
 				<button type="button" class="btn btn-success"
 					onclick="saveText()">Save text</button>
 				<button type="button" class="btn btn-warning"
-					onclick="closeText()">Close text</button>
+					onclick="closeText()">Close</button>
 				</div>
 			`;
 		}

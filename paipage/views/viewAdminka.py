@@ -11,6 +11,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse
 
 from paipage import config
+from paipage.const import LANG_NO
 from paipage.models import Page
 
 from .viewUtils import Params
@@ -40,6 +41,7 @@ class AdminkaPageView(View):
 		params.scripted['language_selectable'] = list(config.language_available.keys())
 		params.scripted['default_page'] = config.template_page_default
 		params.scripted['default_layout'] = config.template_layout_default
+		params.selectables['language'] = params.scripted['language_selectable'] + [LANG_NO]
 		params.selectables['template_layout'] = ['lo-pure', 'lo-menu-left', 'lo-menu-top']
 		params.selectables['template_page'] = ['pg-pure', 'pg-usual', 'pg-cluster']
 		return render(request, 'am-page.html', params.prepare())
