@@ -25,6 +25,7 @@ class Params():
 			raise ValueError(txt)
 
 		self.params = {
+			'request': request,
 			'lang': lang,
 			'strings': config.language_available[lang].strings,
 			'current': None,

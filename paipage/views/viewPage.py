@@ -4,7 +4,7 @@ __contact__ = 'projects@aivanf.com'
 
 import json
 
-from django.shortcuts import render
+from django.shortcuts import render, render_to_response
 from django.views import View
 from django.http import Http404
 
@@ -50,10 +50,17 @@ class PageView(View):
 			raise Http404
 
 		text = page.get_text(lang)
+		
 		if text is None:
 			config.logger.error(f'No lang "{lang}" for page "{path}"')
-			# TODO: show "not available" page
-			raise Http404
+			layout = config.template_layout_default + HTML_EXT
+			params.update({
+				'layout_template': layout,
+				'title': config.language_available[params['lang']].strings['errorNoLang'],
+				'description': '',
+			})
+			return render_to_response('ot-nolang.html', params.prepare())
+
 		return make_page(request, params, page, text)
 
 
