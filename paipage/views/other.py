@@ -10,17 +10,9 @@ from paipage import config, const
 
 from .viewUtils import Params
 
-
-def handler403(request, *args, **argv):
-	params = Params(request)
-	params.update({
-		'layout_template': config.template_layout_default,
-		'title': 'No access',
-		'description': '',
-	})
-	response = render_to_response('ot-output.html', params.prepare())
-	response.status_code = 403
-	return response
+__all__ = [
+	'handler404', 'handler500',
+]
 
 
 def handler404(request, *args, **argv):
@@ -33,4 +25,17 @@ def handler404(request, *args, **argv):
 	})
 	response = render_to_response('ot-output.html', params.prepare())
 	response.status_code = 404
+	return response
+
+
+def handler500(request, *args, **argv):
+	params = Params(request)
+	layout = config.template_layout_default + const.HTML_EXT
+	params.update({
+		'layout_template': layout,
+		'title': config.language_available[params['lang']].strings['error500'],
+		'description': '',
+	})
+	response = render_to_response('ot-output.html', params.prepare())
+	response.status_code = 500
 	return response
