@@ -6,6 +6,10 @@ import os, sys
 
 from .const import REQUIRED_STRINGS, Language
 
+__all__ = [
+	'config', 'configurate',
+]
+
 
 class Config:
 	def __init__(self):
@@ -13,6 +17,8 @@ class Config:
 
 
 config = Config()
+
+PAIPAGE_PATH = os.path.dirname(os.path.abspath(__file__))
 
 
 def configurate(
@@ -25,6 +31,9 @@ def configurate(
 		logger=None,
 		):
 
+	'''
+		Basic setup
+	'''
 	assert isinstance(site_name, str) and len(site_name) > 0
 	config.site_name = site_name
 
@@ -52,22 +61,55 @@ def configurate(
 	# django.conf.settings isn't set yet
 	settings = sys.modules[settings_name]
 
-	APP_DIR = os.path.dirname(os.path.abspath(__file__))
+
+	'''
+		Plugins loading
+	'''
+	config.plugin_installed = {}
+	def collect_plugins(location):
+		location = os.path.join(location, 'plugins')
+		if not os.path.exists(location):
+			return
+		for name in os.listdir(location):
+			if os.path.isdir(os.path.join(location, name)):
+				config.plugin_installed[name] = os.path.join(location, name)
+
+	PROJECT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(settings.__file__)))
+	collect_plugins(PAIPAGE_PATH)
+	collect_plugins(PROJECT_PATH)
+	print(f'** Found plugins: {config.plugin_installed}')
+	# TODO: load plugins from settings
+	config.plugin_enabled = ['primary', 'simple']
+
+
+	'''
+		Django settings
+	'''
+
+	template_dirs = []
+	static_dirs = []
+
+	for name in config.plugin_enabled:
+		location = os.path.join(config.plugin_installed[name], 'templates')
+		if os.path.exists(location):
+			template_dirs.append(location)
+
+		location = os.path.join(config.plugin_installed[name], 'static')
+		if os.path.exists(location):
+			static_dirs.append(location)
 
 	settings.INSTALLED_APPS.append('paipage')
 
 	settings.TEMPLATES.append({
 		'BACKEND': 'django.template.backends.jinja2.Jinja2',
-		'DIRS': [os.path.join(APP_DIR, 'jemplates')],
+		'DIRS': template_dirs,
 		'APP_DIRS': True,
 		'OPTIONS': {
 			'environment': 'paipage.views.jinja2.make_env',
 			# 'autoescape': False,
-		}, 
+		},
 	})
 
-	settings.SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+	settings.STATICFILES_DIRS.extend(static_dirs)
 
-	# TODO: get installed/selected plugins info
-	# TODO: collect static/templates from plugins
-	# TODO: make available templates list
+	settings.SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
