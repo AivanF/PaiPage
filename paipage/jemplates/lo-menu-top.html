@@ -19,7 +19,7 @@
 		<div class="menu-top-section menu-top-section-selected">
 		{% else %}
 		<div class="menu-top-section">
-		<a class="link-white" href="/{{ page.url }}">
+		<a class="menu-section-link" href="/{{ page.url }}">
 		{%- endif -%}
 		{{ txt.title }}
 		{%- if page.pk != current.pk -%}
@@ -37,7 +37,7 @@
 {# Table of content #}
 <div class="col-xs-12 menu-top">
 	<div class="menu-top-title">
-		<a class="link-white" href="/">{{ config.site_name }}</a>
+		<a class="menu-title-link" href="/">{{ config.site_name }}</a>
 	</div>
 
 	<div class="menu-top-content">

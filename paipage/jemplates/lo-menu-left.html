@@ -17,7 +17,7 @@
 	{%- if txt -%}
 	<li>
 		{% if page.pk != current.pk -%}
-		<a class="link-white" href="/{{ page.url }}">
+		<a class="menu-section-link" href="/{{ page.url }}">
 		{%- endif -%}
 		<span class="glyphicon glyphicon-chevron-{{ direction }}"></span> {{ txt.title }}
 		{%- if page.pk != current.pk -%}
@@ -34,8 +34,8 @@
 
 {# Table of content #}
 <div class="col-xs-2 menu-left">
-	<div class="col-xs-12 text-center menu-left-title">
-		<a class="link-white" href="/"><h3>{{ config.site_name }}</h3></a>
+	<div class="col-xs-12 menu-left-title">
+		<a class="menu-title-link" href="/">{{ config.site_name }}</a>
 	</div>
 
 	<div class="col-xs-12 menu-left-content">
