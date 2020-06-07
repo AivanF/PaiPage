@@ -8,6 +8,8 @@
 *.log
 *.sqlite3
 
+_pai*
+
 # Distribution / packaging
 .Python
 build/

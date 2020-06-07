@@ -3,6 +3,8 @@ __copyright__ = 'Copyright 2020, AivanF'
 __contact__ = 'projects@aivanf.com'
 
 import os, sys
+import shutil
+import re
 
 from .const import REQUIRED_STRINGS, Language
 
@@ -24,10 +26,11 @@ PAIPAGE_PATH = os.path.dirname(os.path.abspath(__file__))
 def configurate(
 		settings_name,
 		site_name,
-		template_page_default='pg-usual',
-		template_layout_default='lo-menu-top',
+		template_page_default='pg-pure',
+		template_layout_default='lo-pure',
 		language_default=None,
 		language_available=None,
+		plugin_enabled=['simple'],
 		logger=None,
 		):
 
@@ -39,6 +42,8 @@ def configurate(
 
 	config.template_page_default = template_page_default
 	config.template_layout_default = template_layout_default
+	config.template_page_list = []
+	config.template_layout_list = []
 
 	for x in language_available:
 		assert isinstance(x, Language)
@@ -66,38 +71,87 @@ def configurate(
 		Plugins loading
 	'''
 	config.plugin_installed = {}
-	def collect_plugins(location):
-		location = os.path.join(location, 'plugins')
-		if not os.path.exists(location):
+
+	def collect_plugins(search_dir):
+		search_dir = os.path.join(search_dir, 'plugins')
+		if not os.path.exists(search_dir):
 			return
-		for name in os.listdir(location):
-			if os.path.isdir(os.path.join(location, name)):
-				config.plugin_installed[name] = os.path.join(location, name)
+		for plugin_name in os.listdir(search_dir):
+			plugin_dir = os.path.join(search_dir, plugin_name)
+			if not os.path.isdir(plugin_dir):
+				continue
+
+			template_page_list = []
+			template_layout_list = []
+
+			# Load list of templates
+			location = os.path.join(plugin_dir, 'templates')
+			if os.path.exists(location):
+				for filename in os.listdir(location):
+					match = re.findall(r'^(pg-.+)\.html$', filename)
+					if len(match) == 1:
+						template_page_list.append(match[0])
+					match = re.findall(r'^(lo-.+)\.html$', filename)
+					if len(match) == 1:
+						template_layout_list.append(match[0])
+
+			config.plugin_installed[plugin_name] = {
+				'name': plugin_name,
+				'path': plugin_dir,
+				'template_page_list': template_page_list,
+				'template_layout_list': template_layout_list,
+			}
+			
 
 	PROJECT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(settings.__file__)))
 	collect_plugins(PAIPAGE_PATH)
 	collect_plugins(PROJECT_PATH)
-	print(f'** Found plugins: {config.plugin_installed}')
-	# TODO: load plugins from settings
-	config.plugin_enabled = ['primary', 'simple']
+
+
+	'''
+		Plugins enabling
+	'''
+	# TODO: load enabled plugins from stored settings
+	config.plugin_enabled = ['primary'] + plugin_enabled
+	config.common_css = []
+
+	template_dirs = []
+	static_dirs = []
+
+	def add_common_css(plugin_dir, plugin_name, filename):
+		src = os.path.join(plugin_dir, 'static', filename)
+		res = f'_pai-{plugin_name}-{filename}'
+		if os.path.exists(src):
+			# TODO: copy to STATIC_ROOT if not DEBUG
+			shutil.copyfile(src, os.path.join(plugin_dir, 'static', res))
+			config.common_css.append(res)
+
+	for plugin_name in config.plugin_enabled:
+		plugin_info = config.plugin_installed[plugin_name]
+		plugin_dir = plugin_info['path']
+
+		location = os.path.join(plugin_dir, 'templates')
+		if os.path.exists(location):
+			template_dirs.append(location)
+
+		location = os.path.join(plugin_dir, 'static')
+		if os.path.exists(location):
+			static_dirs.append(location)
+
+		add_common_css(plugin_dir, plugin_name, 'main.css')
+
+		for name in plugin_info['template_page_list']:
+			if name not in config.template_page_list:
+				config.template_page_list.append(name)
+
+		for name in plugin_info['template_layout_list']:
+			if name not in config.template_layout_list:
+				config.template_layout_list.append(name)
 
 
 	'''
 		Django settings
 	'''
-
-	template_dirs = []
-	static_dirs = []
-
-	for name in config.plugin_enabled:
-		location = os.path.join(config.plugin_installed[name], 'templates')
-		if os.path.exists(location):
-			template_dirs.append(location)
-
-		location = os.path.join(config.plugin_installed[name], 'static')
-		if os.path.exists(location):
-			static_dirs.append(location)
-
 	settings.INSTALLED_APPS.append('paipage')
 
 	settings.TEMPLATES.append({
