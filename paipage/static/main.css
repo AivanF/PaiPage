@@ -14,6 +14,20 @@ html, body {
 	background-color: hsl(0,0%,27%);
 	color: white;
 }
+.admin-footer {
+	text-align: center;
+	height: 32px;
+}
+.admin-footer > span {
+	padding: 4px;
+	border: 1px solid hsl(0,50%,20%);
+	border-radius: 6px;
+	background-color: hsl(0,30%,45%);
+	color: white;
+}
+.admin-footer > span > a {
+	color: white;
+}
 .paipage-footer {
 	padding: 32px 0px;
 	text-align: center;
@@ -23,7 +37,7 @@ html, body {
 .link-white {
 	color: white;
 }
-a.link-white:hover {
+.link-white:hover {
 	color: hsl(0,0%,80%);
 	text-decoration: underline;
 }

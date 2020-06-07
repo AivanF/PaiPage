@@ -55,6 +55,7 @@ class PageView(View):
 			config.logger.error(f'No lang "{lang}" for page "{path}"')
 			layout = config.template_layout_default + HTML_EXT
 			params.update({
+				'current': page,
 				'layout_template': layout,
 				'title': config.language_available[params['lang']].strings['errorNoLang'],
 				'description': '',
