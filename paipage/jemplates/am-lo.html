@@ -44,6 +44,18 @@
 			}
 		}
 	});
+
+	const DOMAIN = window.location.href.split('?')[0];
+
+	function getUrlArguments() {
+		let sURLVariables = window.location.search.substring(1).split('&'), sParameterName, i;
+		let res = {};
+		for (i = 0; i < sURLVariables.length; i++) {
+			sParameterName = sURLVariables[i].split('=');
+			res[sParameterName[0]] = sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+		}
+		return res;
+	}
 </script>
 {% import "_macros.html" as macros with context %}
 <div class="container-fluid">

@@ -66,6 +66,10 @@ let editing_page = null;
 const PREFIX_PAGE_EDITOR = 'form-pg-edit-';
 const $blind = $('#blind');
 
+const ACTION_EDIT = 'edit';
+const ACTION_CREATE = 'create';
+const ACTION_VIEW = 'view';
+
 const formPage = PAF.preprocessForm({
 	elements: [
 		{
@@ -246,15 +250,23 @@ function savePageEdit(pk) {
 		$blind.hide();
 	});
 }
-function buildPageEdit(pk) {
+function buildPageEdit(pk, skipHist) {
 	editing_page = all_pages[pk];
 	let result = PAF.buildFormEdit(formPage, editing_page, PREFIX_PAGE_EDITOR, false);
 	result += smallButton('Save', `savePageEdit(${pk})`);
 	result += smallButton('Cancel', `clickRecord(${pk})`);
 	$('#editor').html(result);
 	PAF.updateEditor();
+
+	cleanSelected();
+	$(`#page-${pk}`).addClass('selected');
+
+	if (skipHist) return;
+	const state = {action: ACTION_EDIT, page: pk};
+	const args = $.param(state);
+	history.pushState(state, '', `${DOMAIN}?${args}`);
 }
-function buildPageCreate(upper_pk) {
+function buildPageCreate(upper_pk, skipHist) {
 	editing_page = {
 		pk: -1,
 		upper: upper_pk,
@@ -264,8 +276,16 @@ function buildPageCreate(upper_pk) {
 	result += smallButton('Cancel', `clickRecord(${upper_pk})`);
 	$('#editor').html(result);
 	PAF.updateEditor();
+
+	cleanSelected();
+	$(`#page-${upper_pk}`).addClass('selected');
+
+	if (skipHist) return;
+	const state = {action: ACTION_CREATE, upper: upper_pk}
+	const args = $.param(state);
+	history.pushState(state, '', `${DOMAIN}?${args}`);
 }
-function buildPageView(pk) {
+function buildPageView(pk, skipHist) {
 	editing_page = null;
 	let page = all_pages[pk];
 	let result = PAF.buildFormView(formPage, page);
@@ -274,13 +294,19 @@ function buildPageView(pk) {
 	result += smallButton('Texts', null, `/adminka/page/${page.pk}`);
 	result += smallButton('Edit', `buildPageEdit(${pk})`);
 	$('#editor').html(result);
+
+	cleanSelected();
 	$(`#page-${pk}`).addClass('selected');
+
+	if (skipHist) return;
+	const state = {action: ACTION_VIEW, page: pk};
+	const args = $.param(state);
+	history.pushState(state, '', `${DOMAIN}?${args}`);
 }
 function cleanSelected() {
 	$('.selected').removeClass('selected');
 }
 function clickRecord(pk) {
-	cleanSelected();
 	buildPageView(pk);
 }
 
@@ -331,9 +357,26 @@ function buildStruct() {
 	$structure.html(buildSection(roots, 0));
 }
 
+function buildState(args) {
+	if (!args) return;
+	if (args.action == ACTION_VIEW && args.page) {
+		buildPageView(+args.page, true);
+	}
+	if (args.action == ACTION_EDIT && args.page) {
+		buildPageEdit(+args.page, true);
+	}
+	if (args.action == ACTION_CREATE && args.upper) {
+		buildPageCreate(+args.upper, true);
+	}
+}
+
 $(document).ready(function() {
 	buildStruct();
-	// TODO: add url args, history
+	buildState(getUrlArguments());
+
+	window.addEventListener('popstate', function(e) {
+		buildState(e.state);
+	});
 });
 </script>
 {% endblock %}

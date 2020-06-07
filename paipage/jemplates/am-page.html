@@ -310,7 +310,7 @@ function previewText() {
 
 }
 
-function buildEditor() {
+function buildEditor(skipHist) {
 	$preview.hide();
 	$blind.hide();
 	let result = '';
@@ -344,7 +344,6 @@ function buildEditor() {
 		addLang(LANG_NO);
 		result += `</div>`;
 	} else {
-		// TODO: build form to view&edit or create
 		result += `<div class="col-xs-12">`;
 		if (is_view) {
 			result += `
@@ -382,11 +381,35 @@ function buildEditor() {
 
 	$controls.html(result);
 	PAF.updateEditor();
+
+	if (skipHist) return;
+	const state = {editing_lang: editing_lang, is_view: +is_view};
+	const args = $.param(state);
+	history.pushState(state, '', `${DOMAIN}?${args}`);
+}
+
+function buildState(args) {
+	if (!args) {
+		editing_lang = null;
+	} else {
+		if (typeof args.editing_lang !== 'undefined') {
+			editing_lang = args.editing_lang;
+			if (editing_lang == '')
+				editing_lang = null;
+		}
+		if (typeof args.is_view !== 'undefined') {
+			is_view = !!(+args.is_view);
+		}
+	}
+	buildEditor(true);
 }
 
 $(document).ready(function() {
-	buildEditor();
-	// TODO: add url args, history
+	buildState(getUrlArguments());
+
+	window.addEventListener('popstate', function(e) {
+		buildState(e.state);
+	});
 });
 </script>
 {% endblock %}
