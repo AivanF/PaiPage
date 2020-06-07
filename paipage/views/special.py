@@ -8,7 +8,7 @@ from django.shortcuts import render_to_response
 
 from paipage import config, const
 
-from .viewUtils import Params
+from .params import Params
 
 __all__ = [
 	'handler404', 'handler500',

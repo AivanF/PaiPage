@@ -1,3 +1,3 @@
-from .viewPage import *
-from .viewOther import *
-from .viewAdminka import *
+from .page import *
+from .minor import *
+from .adminka import *

@@ -15,7 +15,7 @@ from paipage import config
 from paipage.const import LANG_NO
 from paipage.models import Page, PageText
 
-from .viewUtils import Params
+from .params import Params
 
 
 class StructureView(View):

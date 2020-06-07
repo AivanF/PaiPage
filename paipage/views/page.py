@@ -16,7 +16,7 @@ from paipage import config
 from paipage.const import PATH_INDEX, HTML_EXT
 from paipage.models import Page
 
-from .viewUtils import Params
+from .params import Params
 
 
 def make_page(request, params, page, text):
