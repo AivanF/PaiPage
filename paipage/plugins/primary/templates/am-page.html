@@ -351,6 +351,9 @@ function buildEditor(skipHist) {
 			result += `
 				<div class="col-xs-12">
 				${PAF.buildFormView(formText, texts[editing_lang])}
+				</div>
+				<div class="col-xs-12 text-center">
+				<br>
 				<br>
 				<button type="button" class="btn btn-success"
 					onclick="editText('${editing_lang}')">Edit text</button>
@@ -369,7 +372,9 @@ function buildEditor(skipHist) {
 				<div class="col-xs-12">
 				${PAF.buildFormEdit(formText, obj,
 					PREFIX_TEXT_EDITOR, texts[editing_lang]==null)}
-				<br>
+				</div>
+				<div class="col-xs-12 text-center">
+				<br><br>
 				<button type="button" class="btn btn-primary"
 					onclick="previewText()">Preview page</button>
 				<button type="button" class="btn btn-success"

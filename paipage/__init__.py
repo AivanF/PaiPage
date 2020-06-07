@@ -127,6 +127,8 @@ def configurate(
 			config.common_css.append(res)
 
 	for plugin_name in config.plugin_enabled:
+		if plugin_name not in config.plugin_installed:
+			raise ValueError(f'Missing enabled plugin "{plugin_name}"')
 		plugin_info = config.plugin_installed[plugin_name]
 		plugin_dir = plugin_info['path']
 

@@ -12,11 +12,11 @@
 
 	<script src="/static/jquery.masonry.min.js"></script>
 
+	{% block meta %}{% endblock %}
+
 	{% for filename in config.common_css %}
 		<link rel="stylesheet" href="/static/{{ filename }}">
 	{% endfor %}
-
-	{% block meta %}{% endblock %}
 </head>
 <body>
 <script type="text/javascript">
