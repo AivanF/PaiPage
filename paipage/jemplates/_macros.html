@@ -53,24 +53,6 @@
 </div>
 {%- endmacro %}
 
-{% macro lang_list() -%}
-	{% if config.language_available |length > 1 -%}
-	<div class="col-xs-12">
-		{{ strings['languages'] }}:
-	</div>
-	<br>
-	<ul>
-	{% for key, x in config.language_available.items() -%}
-		{% if key != lang %}
-		<li><a class="link-white" href="/_lang/{{ key }}?next={{ request.path }}">
-			{{ x.strings['name'] }}
-		</a></li>
-		{%- endif %}
-	{%- endfor %}
-	</ul>
-	{%- endif %}
-{%- endmacro %}
-
 {% macro page_card(page) -%}
 {% set txt = page.get_text(lang) -%}
 {%- if txt -%}

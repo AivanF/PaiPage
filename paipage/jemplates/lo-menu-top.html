@@ -1,6 +1,28 @@
 {% extends "basic.html" %}
 {% import "_macros.html" as macros with context %}
 
+{% macro lang_list() -%}
+	{% if config.language_available |length > 1 -%}
+	<span class="dropdown menu-top-section">
+		<span class="dropdown-toggle menu-section-link" type="button" id="menu-langs" data-toggle="dropdown">
+			{{ strings['languages'] }}<span class="caret"></span>
+		</span>
+
+		<ul class="dropdown-menu" role="menu" aria-labelledby="menu-langs">
+			{% for key, x in config.language_available.items() -%}
+			{% if key != lang %}
+			<li role="presentation">
+				<a role="menuitem" href="/_lang/{{ key }}?next={{ request.path }}">
+				{{ x.strings['name'] }}
+			</a></li>
+			{%- endif %}
+			{%- endfor %}
+		</ul>
+	</span>
+	{%- endif %}
+{%- endmacro %}
+
+
 {% block meta %}
 {{ super() }}
 <link rel="stylesheet" href="/static/lo-menu-top.css">
@@ -48,8 +70,7 @@
 		{{ pageli(page, lang) }}
 		{%- endfor %}
 
-		<!-- TODO: here! -->
-		<!-- {{ macros.lang_list() }} -->
+		{{ lang_list() }}
 	</div>
 </div>
 

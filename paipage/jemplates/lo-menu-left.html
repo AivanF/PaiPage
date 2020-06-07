@@ -1,6 +1,25 @@
 {% extends "basic.html" %}
 {% import "_macros.html" as macros with context %}
 
+{% macro lang_list() -%}
+	{% if config.language_available |length > 1 -%}
+	<div class="col-xs-12">
+		{{ strings['languages'] }}:
+	</div>
+	<br>
+	<ul>
+	{% for key, x in config.language_available.items() -%}
+		{% if key != lang %}
+		<li><a class="link-white" href="/_lang/{{ key }}?next={{ request.path }}">
+			{{ x.strings['name'] }}
+		</a></li>
+		{%- endif %}
+	{%- endfor %}
+	</ul>
+	{%- endif %}
+{%- endmacro %}
+
+
 {% block meta %}
 {{ super() }}
 <link rel="stylesheet" href="/static/lo-menu-left.css">
@@ -48,7 +67,7 @@
 			{%- endfor %}
 		</ul>
 
-		{{ macros.lang_list() }}
+		{{ lang_list() }}
 	</div>
 </div>
 
