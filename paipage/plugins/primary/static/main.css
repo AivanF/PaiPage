@@ -58,19 +58,19 @@ body {
 }
 
 .page-card-holder {
-	width: 100%;
 	display: block;
 	position: relative;
 	float: left;
+	width: 100%;
 }
 .page-card {
+	float: left;
+	width: calc(100% - 20px);
+	margin: 8px;
+	padding: 0px 16px 16px 16px;
 	background-color: hsla(210,33%,50%, 0.1);
 	border: 1px solid hsl(210,33%,50%);
 	border-radius: 6px;
-	padding: 0px 16px 16px 16px;
-	margin: 8px;
-	width: calc(100% - 20px);
-	float: left;
 }
 
 @media (min-width: 992px) {
