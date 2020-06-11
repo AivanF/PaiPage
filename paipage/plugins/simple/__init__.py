@@ -10,7 +10,8 @@ from paipage import TemplateHandler
 
 class PgNested(TemplateHandler):
 	def should_show(self):
-		return len(self.text_full) > 1
+		# TODO: return self.page.children.count() > 0, but check langs
+		return True
 
 
 class PgContents(PgNested):

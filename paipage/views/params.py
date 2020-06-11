@@ -9,7 +9,7 @@ from django.http import HttpResponse
 from paipage import config
 from paipage.const import LANG_KEY, PATH_INDEX, HTML_EXT
 from paipage.models import Page
-from paipage.templating import render_page_short
+import paipage.templating as templating
 
 
 class Params():
@@ -34,6 +34,7 @@ class Params():
 			'current': None,
 			'sections': list(root.children.all()),
 			'layout_template': config.template_layout_default + HTML_EXT,
+			'should_show': self._should_show,
 			'render_page_short': self._render_page_short,
 		}
 		self.selectables = {}
@@ -45,8 +46,11 @@ class Params():
 	def __getitem__(self, key):
 		return self.params[key]
 
+	def _should_show(self, page, text):
+		return templating.should_show(self, page, text)
+
 	def _render_page_short(self, page, text):
-		return render_page_short(self, page, text)
+		return templating.render_page_short(self, page, text)
 
 	def update(self, adict):
 		self.params.update(adict)

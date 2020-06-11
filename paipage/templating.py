@@ -17,6 +17,9 @@ class TemplateHandler():
 		self.lang = params['lang']
 		self.request = params['request']
 
+	def should_show(self):
+		return len(self.text.text_full) > 1
+
 	def get_short(self):
 		# Must return HTML string
 		return self.text.text_short
@@ -26,11 +29,33 @@ class TemplateHandler():
 		return self.params.render(self.template)
 
 
-def render_page_short(params, page, text):
+def ensure_pg(page):
 	template = page.template
 	if not template:
 		template = config.template_page_default
+	return template
 
+
+def ensure_lo(page):
+	layout = page.layout
+	if not layout:
+		layout = config.template_layout_default
+	return layout
+
+
+def should_show(params, page, text):
+	template = ensure_pg(page)
+	if template in config.template_handlers:
+		handler = config.template_handlers[template](
+			template, page, text, params
+		)
+		return handler.should_show()
+
+	return len(text.text_full) > 1
+
+
+def render_page_short(params, page, text):
+	template = ensure_pg(page)
 	if template in config.template_handlers:
 		handler = config.template_handlers[template](
 			template, page, text, params
@@ -41,13 +66,8 @@ def render_page_short(params, page, text):
 
 
 def render_page_full(params, page, text):
-	template = page.template
-	if not template:
-		template = config.template_page_default
-
-	layout = page.layout
-	if not layout:
-		layout = config.template_layout_default
+	template = ensure_pg(page)
+	layout = ensure_lo(page)
 	layout += HTML_EXT
 
 	params.update({

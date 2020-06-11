@@ -3,9 +3,9 @@
 {%- if txt -%}
 <div class="page-card">
 	<h3>
-		{%- if txt.text_full|length > 0 %}<a href="/{{ page.url }}">{% endif -%}
+		{%- if should_show(page,txt) %}<a href="/{{ page.url }}">{% endif -%}
 		{{ txt.title }}
-		{%- if txt.text_full|length > 0 %}</a>{% endif -%}
+		{%- if should_show(page,txt) %}</a>{% endif -%}
 	</h3>
 	{{ render_page_short(page,txt) |safe }}
 </div>
@@ -16,14 +16,14 @@
 <ul>{% for page in children -%}
 	{% set txt = page.get_text(lang) -%}
 	{% if txt -%}
-		{%- if txt.text_full|length > 0 %}<a href="/{{ page.url }}">{% endif -%}
+		{%- if should_show(page,txt) %}<a href="/{{ page.url }}">{% endif -%}
 		<li>
 			{{ txt.title }}
 			{% if level < max_level -%}
 			{{ page_contents(page.children.all(), max_level, level+1) }}
 			{%- endif %}
 		</li>
-		{%- if txt.text_full|length > 0 %}</a>{% endif %}
+		{%- if should_show(page,txt) %}</a>{% endif %}
 	{%- endif %}
 {%- endfor %}</ul>
 {%- endmacro %}
