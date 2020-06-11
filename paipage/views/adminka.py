@@ -4,7 +4,7 @@ __contact__ = 'projects@aivanf.com'
 
 import json
 
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -28,7 +28,7 @@ class StructureView(View):
 		params.scripted['default_layout'] = config.template_layout_default
 		params.selectables['template_layout'] = config.template_layout_list
 		params.selectables['template_page'] = config.template_page_list
-		return render(request, 'am-struct.html', params.prepare())
+		return params.render('am-struct.html')
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -46,7 +46,7 @@ class AdminkaPageView(View):
 		params.selectables['language'] = params.scripted['language_selectable'] + [LANG_NO]
 		params.selectables['template_layout'] = config.template_layout_list
 		params.selectables['template_page'] = config.template_page_list
-		return render(request, 'am-page.html', params.prepare())
+		return params.render('am-page.html')
 
 	@method_decorator(staff_member_required)
 	def post(self, request, pk=-1):

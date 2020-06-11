@@ -4,6 +4,8 @@ __contact__ = 'projects@aivanf.com'
 
 import json
 
+import jinja2
+
 from django.shortcuts import render, render_to_response
 from django.views import View
 from django.http import Http404
@@ -37,7 +39,7 @@ def make_page(request, params, page, text):
 		'children': list(page.children.all()),
 		'layout_template': layout,
 	})
-	return render(request, template, params.prepare())
+	return params.render(template)
 
 
 class PageView(View):
@@ -60,9 +62,10 @@ class PageView(View):
 				'title': config.language_available[params['lang']]['errorNoLang'],
 				'description': '',
 			})
-			return render_to_response('ot-nolang.html', params.prepare())
+			return params.render('ot-nolang.html')
 
 		else:
+			text.text_full = params.render_str(text.text_full)
 			return make_page(request, params, page, text)
 
 
@@ -77,4 +80,10 @@ class PagePreView(View):
 		if page is None:
 			raise Http404
 
-		return make_page(request, params, page, text)
+		try:
+			text['text_full'] = params.render_str(text['text_full'])
+			return make_page(request, params, page, text)
+		except jinja2.exceptions.TemplateError as ex:
+			params['title'] = 'Template error!'
+			params['description'] = repr(ex)
+			return params.render('ot-output.html')

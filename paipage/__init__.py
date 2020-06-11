@@ -151,20 +151,13 @@ def configurate(
 				config.template_layout_list.append(name)
 
 
+	from .jinja2 import make_env
+	config.jinja2 = make_env(template_dirs=template_dirs, config=config)
+
 	'''
 		Django settings
 	'''
 	settings.INSTALLED_APPS.append('paipage')
-
-	settings.TEMPLATES.append({
-		'BACKEND': 'django.template.backends.jinja2.Jinja2',
-		'DIRS': template_dirs,
-		'APP_DIRS': True,
-		'OPTIONS': {
-			'environment': 'paipage.views.jinja2.make_env',
-			# 'autoescape': False,
-		},
-	})
 
 	settings.STATICFILES_DIRS.extend(static_dirs)
 
