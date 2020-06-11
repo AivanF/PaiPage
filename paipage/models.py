@@ -2,6 +2,8 @@ __author__ = 'AivanF'
 __copyright__ = 'Copyright 2020, AivanF'
 __contact__ = 'projects@aivanf.com'
 
+import json
+
 import cachetools
 
 from django.db import models
@@ -14,6 +16,7 @@ from paipage.const import LANG_NO
 __all__ = [
 	'Page',
 	'PageText',
+	'GlobalSetting',
 ]
 
 dater = '%Y-%m-%d'
@@ -31,7 +34,6 @@ class Page(models.Model):
 	# Main data
 	url = models.CharField(max_length=256, null=False, unique=True)
 	public = models.BooleanField(default=True)
-	# TODO: make choices
 	template = models.CharField(default='', max_length=256, null=False, blank=True)
 	layout = models.CharField(default='', max_length=256, null=False, blank=True)
 
@@ -127,3 +129,38 @@ class PageText(models.Model):
 
 	def __repr__(self):
 		return f'{self.pk}. Text "{self.page.url}" / "{self.language}" {self.updated.strftime(dater)}'
+
+
+class GlobalSetting(models.Model):
+	key = models.CharField(max_length=64, null=False, unique=True)
+	value = models.TextField(null=False, blank=True)
+	updated = models.DateTimeField(auto_now=True)
+
+	@classmethod
+	def get(cls, key, default=''):
+		obj = cls.objects.filter(key=key).first()
+		if obj is not None:
+			return obj.value
+		else:
+			return default
+
+	@classmethod
+	def set(cls, key, value):
+		obj = cls.objects.filter(key=key).first()
+		if obj is not None:
+			obj.value = value
+		else:
+			obj = cls(key=key, value=value)
+		obj.save()
+
+	@classmethod
+	def get_json(cls, key, default):
+		obj = cls.objects.filter(key=key).first()
+		if obj is not None:
+			return json.loads(obj.value)
+		else:
+			return default
+
+	@classmethod
+	def set_json(cls, key, value):
+		cls.set(key, json.dumps(value))

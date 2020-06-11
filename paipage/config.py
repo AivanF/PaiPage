@@ -7,7 +7,7 @@ import importlib
 import shutil
 import re
 
-from .const import RE_PG_FILE, RE_LO_FILE, REQUIRED_STRINGS, Language
+from . import const
 from .jinja2 import make_env
 
 __all__ = [
@@ -29,10 +29,10 @@ PAIPAGE_PATH = os.path.dirname(sys.modules['paipage'].__file__)
 
 def configurate(
 		site_name,
+		language_default,
+		language_available,
 		template_page_default='pg-pure',
 		template_layout_default='lo-pure',
-		language_default=None,
-		language_available=None,
 		plugin_paths=[],
 		plugin_enabled=['simple'],
 		logger=None,
@@ -50,15 +50,15 @@ def configurate(
 	config.template_layout_list = []
 
 	for x in language_available:
-		assert isinstance(x, Language)
+		assert isinstance(x, const.Language)
 	config.language_available = {x.code: x for x in language_available}
 	assert isinstance(language_default, str)
 	assert language_default in config.language_available
 	config.language_default = language_default
-	
+
 	config.plugin_paths = plugin_paths
 	config.plugin_installed = {}
-	config.plugin_enabled = plugin_enabled
+	config.coded_plugin_enabled = plugin_enabled
 
 	if logger is None:
 		import logging
@@ -119,10 +119,10 @@ def collect_plugins(search_dir):
 		location = os.path.join(plugin_dir, 'templates')
 		if os.path.exists(location):
 			for filename in os.listdir(location):
-				match = re.findall(RE_PG_FILE, filename)
+				match = re.findall(const.RE_PG_FILE, filename)
 				if len(match) == 1:
 					plugin_info['template_page_list'].append(match[0])
-				match = re.findall(r'^(lo-.+)\.html$', filename)
+				match = re.findall(const.RE_LO_FILE, filename)
 				if len(match) == 1:
 					plugin_info['template_layout_list'].append(match[0])
 
@@ -174,6 +174,7 @@ def enable_plugins():
 
 def configurate_final():
 	from django.conf import settings
+	from .models import GlobalSetting
 
 	## Plugins loading
 	collect_plugins(PAIPAGE_PATH)
@@ -181,8 +182,14 @@ def configurate_final():
 		collect_plugins(path)
 
 	## Plugins enabling
-	# TODO: load enabled plugins from stored adminka settings
+	saved_plugin_enabled = GlobalSetting.get_json('plugin_enabled', [])
+	if saved_plugin_enabled:
+		config.plugin_enabled = saved_plugin_enabled
+	else:
+		config.plugin_enabled = config.coded_plugin_enabled
 	config.plugin_enabled = ['primary'] + config.plugin_enabled
+	config.plugin_enabled = list(const.dedupe(config.plugin_enabled))
+
 	enable_plugins()
 
 	config.jinja2 = make_env(template_dirs=config.template_dirs, config=config)

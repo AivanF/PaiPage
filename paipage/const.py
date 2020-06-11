@@ -1,6 +1,15 @@
 
 from django.conf import settings
 
+
+def dedupe(items):
+	seen = set()
+	for item in items:
+		if item not in seen:
+			yield item
+			seen.add(item)
+
+
 RE_PG_FILE = r'^(pg-.+)\.html$'
 RE_LO_FILE = r'^(lo-.+)\.html$'
 RE_PG_NAME = r'^(pg-.+)$'
