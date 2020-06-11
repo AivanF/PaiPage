@@ -41,3 +41,42 @@
 	{%- endif -%}
 {%- endif %}
 {%- endmacro %}
+
+{% macro make_lang_list() -%}
+	{% if config.language_available |length > 1 -%}
+	<div class="col-xs-12">
+		{{ strings['languages'] }}:
+	</div>
+	<br>
+	<ul>
+	{% for key, x in config.language_available.items() -%}
+		{% if key != lang %}
+		<li><a class="link-white" href="/_lang/{{ key }}?next={{ request.path }}">
+			{{ x['name'] }}
+		</a></li>
+		{%- endif %}
+	{%- endfor %}
+	</ul>
+	{%- endif %}
+{%- endmacro %}
+
+{% macro make_lang_btn() -%}
+	{% if config.language_available |length > 1 -%}
+	<span class="dropdown menu-top-section">
+		<span class="dropdown-toggle menu-section-link" type="button" id="menu-langs" data-toggle="dropdown">
+			{{ strings['languages'] }}<span class="caret"></span>
+		</span>
+
+		<ul class="dropdown-menu" role="menu" aria-labelledby="menu-langs">
+			{% for key, x in config.language_available.items() -%}
+			{% if key != lang %}
+			<li role="presentation">
+				<a role="menuitem" href="/_lang/{{ key }}?next={{ request.path }}">
+				{{ x['name'] }}
+			</a></li>
+			{%- endif %}
+			{%- endfor %}
+		</ul>
+	</span>
+	{%- endif %}
+{%- endmacro %}
