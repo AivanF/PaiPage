@@ -72,12 +72,15 @@ class AdminkaPageView(View):
 					page.url = new_url
 
 		if res['success']:
-			new_upper = int(j['upper'])
+			new_upper = j['upper']
+			if new_upper is not None:
+				new_upper = int(new_upper)
+			print(f'Upper new: {new_upper}, old: {page.upper}')
 			if new_upper != page.upper:
 				if new_upper == pk:
 					res['success'] = False
 					res['comment'] = 'Cannot link page to itself'
-				if new_upper != None:
+				if new_upper is not None:
 					temp_upper = new_upper
 					while True:
 						if temp_upper is None:
@@ -92,7 +95,10 @@ class AdminkaPageView(View):
 						if pk == temp_upper:
 							res['success'] = False
 							res['comment'] = 'Cannot link page to itself'
-				page.upper = get_object_or_404(Page, pk=new_upper)
+				if new_upper is None:
+					page.upper = None
+				else:
+					page.upper = get_object_or_404(Page, pk=new_upper)
 
 		if res['success']:
 			page.layout = j['template_layout']
