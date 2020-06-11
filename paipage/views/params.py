@@ -47,5 +47,5 @@ class Params():
 	def prepare(self):
 		self.params['scripted'] = {}
 		for key in list(self.scripted.keys()):
-			self.params['scripted'][key] = json.dumps(self.scripted[key])
+			self.params['scripted'][key] = json.dumps(self.scripted[key], indent=4, sort_keys=True)
 		return self.params

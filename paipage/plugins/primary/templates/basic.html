@@ -21,7 +21,7 @@
 <body>
 <script type="text/javascript">
 	{% for key, value in scripted.items() -%}
-	const {{ key }} = {{ value|safe }};
+	const {{ key }} = {{ value|safe_json|safe }};
 	{% endfor %}
 </script>
 <div class="container-fluid">

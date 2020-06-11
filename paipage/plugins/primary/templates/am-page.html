@@ -15,6 +15,15 @@
 		width: 100%;
 		min-height: 8em;
 	}
+	#controls img {
+		max-width: 160px;
+	}
+	.button-box {
+		display: inline-block;
+		margin: 0px 8px;
+		text-align: right;
+		text-decoration: underline;
+	}
 	#preview {
 		float: left;
 		width: 100%;
@@ -215,6 +224,18 @@ PAF.addCustomSelectable('language', {
 });
 
 
+function smallButton(text, onclick, url) {
+	if (url) {
+		return `<div class="button-box">
+				<a class="clickable" href="${url}">${text}</a>
+				</div>`;
+	} else {
+		return `<div class="button-box">
+				<span class="clickable" onclick="${onclick};">${text}</a>
+				</div>`;
+	}
+}
+
 function viewText(lang) {
 	editing_lang = lang;
 	is_view = true;
@@ -228,7 +249,6 @@ function editText(lang) {
 }
 
 function saveText() {
-	// TODO: ask if sure if preview is hidden
 	let form = PAF.validateForm(formText, PREFIX_TEXT_EDITOR, false);
 	if (!form)
 		return;
@@ -254,7 +274,8 @@ function saveText() {
 				texts[form.language] = Object.assign(old_one, form);
 				texts[editing_lang] = undefined;
 			}
-			editing_lang = null;
+			if (!confirm('Keep editing?'))
+				editing_lang = null;
 			buildEditor();
 		} else {
 			alert(`Error: ${data.comment}`);
@@ -268,7 +289,8 @@ function saveText() {
 
 function closeText() {
 	if (!is_view) {
-		// TODO: ask if sure
+		if (!confirm(`Are you sure to discard changes for text lang "${editing_lang}" of page "${the_page.url}"?`))
+			return;
 	}
 	editing_lang = null;
 	buildEditor();
@@ -320,7 +342,7 @@ function buildEditor(skipHist) {
 			<div class="col-xs-12 col-md-6">
 			${PAF.buildFormView(formPage, the_page)}
 			<br>
-			<a href="/adminka/structure?action=view&page=${the_page.pk}" class="clickable">Open page settings</a>
+			${smallButton('<span class="glyphicon glyphicon-cog"></span> Open page settings', null, `/adminka/structure?action=view&page=${the_page.pk}`)}
 			</div>
 		`;
 
@@ -329,22 +351,18 @@ function buildEditor(skipHist) {
 		function addLang(lang) {
 			result += `<br><i>${lang}:</i> `;
 			if (texts[lang]) {
-				result += `
-					"${texts[lang].title}"
-					<button type="button" class="btn btn-primary"
-						onclick="viewText('${lang}')">Open text</button>
-				`;
+				result += `"${texts[lang].title}"`;
+				result += smallButton('<span class="glyphicon glyphicon-edit"></span> Open text', `viewText('${lang}')`);
+				result += smallButton('<span class="glyphicon glyphicon-eye-open"></span> View page', null, `/${lang}/${the_page.url}`);
 			} else {
-				result += `
-					none
-					<button type="button" class="btn btn-success"
-						onclick="editText('${lang}')">Add text</button>
-				`;
+				result += 'none';
+				result += smallButton('<span class="glyphicon glyphicon-file"></span> Add text', `editText('${lang}')`);
 			}
 		}
 		language_selectable.forEach(addLang);
 		addLang(LANG_NO);
 		result += `</div>`;
+
 	} else {
 		result += `<div class="col-xs-12">`;
 		if (is_view) {
@@ -355,18 +373,18 @@ function buildEditor(skipHist) {
 				<div class="col-xs-12 text-center">
 				<br>
 				<br>
-				<button type="button" class="btn btn-success"
-					onclick="editText('${editing_lang}')">Edit text</button>
-				<button type="button" class="btn btn-primary"
-					onclick="closeText()">Close</button>
+				${smallButton('<span class="glyphicon glyphicon-edit"></span> Edit text', `editText('${editing_lang}')`)}
+				${smallButton('<span class="glyphicon glyphicon-remove"></span> Close', `closeText()`)}
 				</div>
 			`;
 		} else {
 			let obj = texts[editing_lang];
+			let sv_txt_lbl = '<span class="glyphicon glyphicon-floppy-disk"></span> Save text';
 			if (!obj) {
 				obj = {
 					language: editing_lang,
 				}
+				sv_txt_lbl = '<span class="glyphicon glyphicon-file"></span> Create text';
 			}
 			result += `
 				<div class="col-xs-12">
@@ -375,12 +393,9 @@ function buildEditor(skipHist) {
 				</div>
 				<div class="col-xs-12 text-center">
 				<br><br>
-				<button type="button" class="btn btn-primary"
-					onclick="previewText()">Preview page</button>
-				<button type="button" class="btn btn-success"
-					onclick="saveText()">Save text</button>
-				<button type="button" class="btn btn-warning"
-					onclick="closeText()">Close</button>
+				${smallButton('<span class="glyphicon glyphicon-eye-open"></span> Preview page', `previewText()`)}
+				${smallButton(sv_txt_lbl, `saveText()`)}
+				${smallButton('<span class="glyphicon glyphicon-remove"></span> Close', `closeText()`)}
 				</div>
 			`;
 		}

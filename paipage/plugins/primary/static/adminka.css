@@ -6,6 +6,21 @@
 	color: white;
 }
 
+.clickable {
+	color: black;
+}
+.clickable:hover, .clickable.selected {
+	text-decoration: underline;
+	cursor: pointer;
+	color: black;
+}
+.clickable:hover {
+	background: rgba(255,255,63,0.3);
+}
+.clickable.selected {
+	background: rgba(127,255,63,0.3);
+}
+
 #blind {
 	position: absolute;
 	top: 0;

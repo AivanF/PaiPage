@@ -14,24 +14,10 @@
 		padding-left: 14px;
 		border-left: 2px dashed DarkGray;
 	}
-	.clickable {
-		color: black;
-	}
-	.clickable:hover, .clickable.selected {
-		text-decoration: underline;
-		cursor: pointer;
-		color: black;
-	}
-	.clickable:hover {
-		background: rgba(255,255,63,0.3);
-	}
-	.clickable.selected {
-		background: rgba(127,255,63,0.3);
-	}
 	.clickable:hover ~ .record, .selected ~ .record {
 		background: rgba(0,95,191,0.1);
 	}
-	.editor-button-box {
+	.button-box {
 		display: inline-block;
 		float: right;
 		margin: 0px 8px;
@@ -206,11 +192,11 @@ PAF.addCustomType('slug', {
 
 function smallButton(text, onclick, url) {
 	if (url) {
-		return `<div class="editor-button-box">
+		return `<div class="button-box">
 				<a class="clickable" href="${url}">${text}</a>
 				</div>`;
 	} else {
-		return `<div class="editor-button-box">
+		return `<div class="button-box">
 				<span class="clickable" onclick="${onclick};">${text}</a>
 				</div>`;
 	}
@@ -291,8 +277,8 @@ function buildPageView(pk, skipHist) {
 	let result = PAF.buildFormView(formPage, page);
 	result += smallButton('Visit', null, `/${page.url}`);
 	result += smallButton('Add subpage', `buildPageCreate(${pk})`);
-	result += smallButton('Texts', null, `/adminka/page/${page.pk}`);
-	result += smallButton('Edit', `buildPageEdit(${pk})`);
+	result += smallButton('Edit Texts', null, `/adminka/page/${page.pk}`);
+	result += smallButton('Edit Settings', `buildPageEdit(${pk})`);
 	$('#editor').html(result);
 
 	cleanSelected();
@@ -318,17 +304,14 @@ function buildSection(keys, shift) {
 		let page = all_pages[pk];
 		result += '<div class="record">';
 		result += `<span id="page-${pk}" class="clickable" onclick="event.stopPropagation(); clickRecord(${pk});"><b>/${page.url}</b></span>`;
-		if (page.lang_no) {
-			// TODO: add hint
-			result += ' (*)';
-		} else {
-			// TODO: add red color if not all
-			result += ` (${Object.keys(page.titles).length}/${language_selectable.length})`;
-			// TODO: add hint:
-			//`Texts: ${Object.keys(page.titles).length} of ${language_selectable.length} languagess`;
-		}
-		result += ` Page: "${page.template_page}"`;
-		result += ` LayOut: "${page.template_layout}"`;
+
+		// TODO: add red color if not all
+		result += ` (${page.lang_no ? 'c+' : ''}${Object.keys(page.titles).length}/${language_selectable.length})`;
+		// TODO: add hint:
+		//`Texts: ${Object.keys(page.titles).length} of ${language_selectable.length} languages`;
+
+		result += ` ${page.template_page ? page.template_page : '_'} :`;
+		result += ` ${page.template_layout ? page.template_layout : '_'}`;
 		if (page.children) {
 			result += buildSection(page.children, shift+1);
 		}
