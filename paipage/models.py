@@ -80,7 +80,9 @@ class Page(models.Model):
 
 	def __repr__(self):
 		result = f'{self.pk}. Page "{self.url}" {self.updated.strftime(dater)}'\
-			f' langs: {self.texts.count()}'
+			f' ({self.texts.count()}/)'\
+			f' {"_" if not self.template else self.template }'\
+			f' : {"_" if not self.layout else self.layout }'
 		return result
 
 

@@ -13,20 +13,6 @@
 		<br><br>
 		{%- endif %}
 
-		<div class="page-card-holder">
-		{%- for page in children -%}
-			{{ utils.page_card(page) }}
-		{%- endfor %}
-		</div>
-		<script type="text/javascript">
-		$(document).ready(function(){ 
-			$('.page-card-holder').masonry({
-				itemSelector: '.page-card',
-				singleMode: true,
-				isResizable: true,
-				isAnimated: false,
-			}); 
-		});
-		</script>
+		{{ utils.page_contents(children) }}
 	</div>
 {% endblock %}

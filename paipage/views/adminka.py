@@ -28,7 +28,7 @@ class StructureView(View):
 		params.scripted['default_layout'] = config.template_layout_default
 		params.selectables['template_layout'] = config.template_layout_list
 		params.selectables['template_page'] = config.template_page_list
-		return params.render('am-struct.html')
+		return params.render('am-struct')
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -46,7 +46,7 @@ class AdminkaPageView(View):
 		params.selectables['language'] = params.scripted['language_selectable'] + [LANG_NO]
 		params.selectables['template_layout'] = config.template_layout_list
 		params.selectables['template_page'] = config.template_page_list
-		return params.render('am-page.html')
+		return params.render('am-page')
 
 	@method_decorator(staff_member_required)
 	def post(self, request, pk=-1):

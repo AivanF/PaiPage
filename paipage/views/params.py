@@ -9,6 +9,7 @@ from django.http import HttpResponse
 from paipage import config
 from paipage.const import LANG_KEY, PATH_INDEX, HTML_EXT
 from paipage.models import Page
+from paipage.templating import render_page_short
 
 
 class Params():
@@ -33,6 +34,7 @@ class Params():
 			'current': None,
 			'sections': list(root.children.all()),
 			'layout_template': config.template_layout_default + HTML_EXT,
+			'render_page_short': self._render_page_short,
 		}
 		self.selectables = {}
 		self.scripted = {'selectables': self.selectables}
@@ -42,6 +44,9 @@ class Params():
 
 	def __getitem__(self, key):
 		return self.params[key]
+
+	def _render_page_short(self, page, text):
+		return render_page_short(self, page, text)
 
 	def update(self, adict):
 		self.params.update(adict)
@@ -58,6 +63,6 @@ class Params():
 		return html
 
 	def render(self, template_name):
-		template_obj = config.jinja2.get_template(template_name)
+		template_obj = config.jinja2.get_template(template_name + HTML_EXT)
 		html = template_obj.render(**self.prepare())
 		return HttpResponse(html)

@@ -1,17 +1,10 @@
 {% extends layout_template %}
+{% import "_utils.html" as utils with context %}
 
 {% block title %}{{ text.title }}{% endblock %}
 
 {% block page_content %}
-	{% if upper -%}
-	{% set txt = upper.get_text(lang) -%}
-	{%- if txt -%}
-	<div class="upheader"><a href="/{{ upper.url }}">
-		<span class="glyphicon glyphicon-share-alt"></span>
-		{{ txt.title }}
-	</a></div>
-	{%- endif -%}
-	{%- endif -%}
+	{{ utils.make_upper(upper) }}
 	<h1>{{ text.title }}</h1>
 
 	<div class="page-main-content">

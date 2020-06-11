@@ -17,29 +17,9 @@ from django.views.decorators.csrf import csrf_exempt
 from paipage import config
 from paipage.const import PATH_INDEX, HTML_EXT
 from paipage.models import Page
+from paipage.templating import render_page_full
 
 from .params import Params
-
-
-def make_page(request, params, page, text):
-	template = page.template
-	if not template:
-		template = config.template_page_default
-	template += HTML_EXT
-
-	layout = page.layout
-	if not layout:
-		layout = config.template_layout_default
-	layout += HTML_EXT
-
-	params.update({
-		'current': page,
-		'text': text,
-		'upper': page.upper,
-		'children': list(page.children.all()),
-		'layout_template': layout,
-	})
-	return params.render(template)
 
 
 class PageView(View):
@@ -62,11 +42,11 @@ class PageView(View):
 				'title': config.language_available[params['lang']]['errorNoLang'],
 				'description': '',
 			})
-			return params.render('ot-nolang.html')
+			return params.render('ot-nolang')
 
 		else:
 			text.text_full = params.render_str(text.text_full)
-			return make_page(request, params, page, text)
+			return render_page_full(params, page, text)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -82,8 +62,8 @@ class PagePreView(View):
 
 		try:
 			text['text_full'] = params.render_str(text['text_full'])
-			return make_page(request, params, page, text)
+			return render_page_full(params, page, text)
 		except jinja2.exceptions.TemplateError as ex:
 			params['title'] = 'Template error!'
 			params['description'] = repr(ex)
-			return params.render('ot-output.html')
+			return params.render('ot-output')

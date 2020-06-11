@@ -1,6 +1,11 @@
 
 from django.conf import settings
 
+RE_PG_FILE = r'^(pg-.+)\.html$'
+RE_LO_FILE = r'^(lo-.+)\.html$'
+RE_PG_NAME = r'^(pg-.+)$'
+RE_LO_NAME = r'^(lo-.+)$'
+
 HTML_EXT = '.html'
 PATH_INDEX = 'index'
 
