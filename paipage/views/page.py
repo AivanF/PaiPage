@@ -57,12 +57,13 @@ class PageView(View):
 			params.update({
 				'current': page,
 				'layout_template': layout,
-				'title': config.language_available[params['lang']].strings['errorNoLang'],
+				'title': config.language_available[params['lang']]['errorNoLang'],
 				'description': '',
 			})
 			return render_to_response('ot-nolang.html', params.prepare())
 
-		return make_page(request, params, page, text)
+		else:
+			return make_page(request, params, page, text)
 
 
 @method_decorator(csrf_exempt, name='dispatch')

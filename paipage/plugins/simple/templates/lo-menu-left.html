@@ -11,7 +11,7 @@
 	{% for key, x in config.language_available.items() -%}
 		{% if key != lang %}
 		<li><a class="link-white" href="/_lang/{{ key }}?next={{ request.path }}">
-			{{ x.strings['name'] }}
+			{{ x['name'] }}
 		</a></li>
 		{%- endif %}
 	{%- endfor %}

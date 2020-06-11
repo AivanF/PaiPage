@@ -1,4 +1,6 @@
 
+from django.conf import settings
+
 HTML_EXT = '.html'
 PATH_INDEX = 'index'
 
@@ -20,7 +22,23 @@ class Language:
 		self.code = code
 		for key in REQUIRED_STRINGS:
 			assert key in strings, f'No string "{key}" for lang "{code}"'
-		self.strings = strings
+		self._strings = strings
+
+	def as_dict(self):
+		return self._strings
+
+	def __setitem__(self, key, item):
+		self._strings[key] = item
+
+	def __getitem__(self, key):
+		if key in self._strings:
+			return self._strings[key]
+		else:
+			txt = f'Missing string "{key}"'
+			if settings.DEBUG:
+				raise KeyError(txt)
+			else:
+				return f'[ {txt} ]'
 
 
 lang_en = Language(

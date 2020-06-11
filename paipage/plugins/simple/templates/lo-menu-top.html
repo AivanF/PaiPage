@@ -13,7 +13,7 @@
 			{% if key != lang %}
 			<li role="presentation">
 				<a role="menuitem" href="/_lang/{{ key }}?next={{ request.path }}">
-				{{ x.strings['name'] }}
+				{{ x['name'] }}
 			</a></li>
 			{%- endif %}
 			{%- endfor %}

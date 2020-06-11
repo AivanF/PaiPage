@@ -27,7 +27,7 @@ class Params():
 		self.params = {
 			'request': request,
 			'lang': lang,
-			'strings': config.language_available[lang].strings,
+			'strings': config.language_available[lang].as_dict(),
 			'current': None,
 			'sections': list(root.children.all()),
 			'layout_template': config.template_layout_default + HTML_EXT,

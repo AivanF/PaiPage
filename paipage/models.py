@@ -85,7 +85,7 @@ class Page(models.Model):
 
 
 language_choices = [(LANG_NO, 'NoLang')] + [
-	(x.code, x.strings['name'])
+	(x.code, x['name'])
 	for x in config.language_available.values()
 ]
 
