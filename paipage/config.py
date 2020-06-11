@@ -10,6 +10,12 @@ import re
 from .const import RE_PG_FILE, RE_LO_FILE, REQUIRED_STRINGS, Language
 from .jinja2 import make_env
 
+__all__ = [
+	'config',
+	'configurate',
+	'configurate_final',
+]
+
 
 class Config:
 	def __init__(self):
@@ -19,6 +25,50 @@ class Config:
 config = Config()
 
 PAIPAGE_PATH = os.path.dirname(sys.modules['paipage'].__file__)
+
+
+def configurate(
+		site_name,
+		template_page_default='pg-pure',
+		template_layout_default='lo-pure',
+		language_default=None,
+		language_available=None,
+		plugin_paths=[],
+		plugin_enabled=['simple'],
+		logger=None,
+		):
+
+	'''
+		Basic setup
+	'''
+	assert isinstance(site_name, str) and len(site_name) > 0
+	config.site_name = site_name
+
+	config.template_page_default = template_page_default
+	config.template_layout_default = template_layout_default
+	config.template_page_list = []
+	config.template_layout_list = []
+
+	for x in language_available:
+		assert isinstance(x, Language)
+	config.language_available = {x.code: x for x in language_available}
+	assert isinstance(language_default, str)
+	assert language_default in config.language_available
+	config.language_default = language_default
+	
+	config.plugin_paths = plugin_paths
+	config.plugin_installed = {}
+	config.plugin_enabled = plugin_enabled
+
+	if logger is None:
+		import logging
+		logger = logging.getLogger('paipage')
+		logger.setLevel(logging.DEBUG)
+		console_handler = logging.StreamHandler(sys.stdout)
+		formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
+		console_handler.setFormatter(formatter)
+		logger.addHandler(console_handler)
+	config.logger = logger
 
 
 def attr2key(src, dst, src_name, dst_name=None):
@@ -122,73 +172,21 @@ def enable_plugins():
 		config.template_handlers.update(plugin_info['template_handlers'])
 
 
-def configurate(
-		settings_name,
-		site_name,
-		template_page_default='pg-pure',
-		template_layout_default='lo-pure',
-		language_default=None,
-		language_available=None,
-		plugin_enabled=['simple'],
-		logger=None,
-		):
+def configurate_final():
+	from django.conf import settings
 
-	'''
-		Basic setup
-	'''
-	assert isinstance(site_name, str) and len(site_name) > 0
-	config.site_name = site_name
-
-	config.template_page_default = template_page_default
-	config.template_layout_default = template_layout_default
-	config.template_page_list = []
-	config.template_layout_list = []
-
-	for x in language_available:
-		assert isinstance(x, Language)
-	config.language_available = {x.code: x for x in language_available}
-	assert isinstance(language_default, str)
-	assert language_default in config.language_available
-	config.language_default = language_default
-
-	if logger is None:
-		import logging
-		logger = logging.getLogger('paipage')
-		logger.setLevel(logging.DEBUG)
-		console_handler = logging.StreamHandler(sys.stdout)
-		formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
-		console_handler.setFormatter(formatter)
-		logger.addHandler(console_handler)
-	config.logger = logger
-
-
-	# django.conf.settings isn't set yet
-	settings = sys.modules[settings_name]
-
-
-	'''
-		Plugins loading
-	'''
-	config.plugin_installed = {}
-	PROJECT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(settings.__file__)))
+	## Plugins loading
 	collect_plugins(PAIPAGE_PATH)
-	# TODO: set as arg `plugin_paths`
-	collect_plugins(PROJECT_PATH)
+	for path in config.plugin_paths:
+		collect_plugins(path)
 
-
-	'''
-		Plugins enabling
-	'''
-	# TODO: load enabled plugins from stored settings
-	config.plugin_enabled = ['primary'] + plugin_enabled
+	## Plugins enabling
+	# TODO: load enabled plugins from stored adminka settings
+	config.plugin_enabled = ['primary'] + config.plugin_enabled
 	enable_plugins()
 
 	config.jinja2 = make_env(template_dirs=config.template_dirs, config=config)
 
-
-	'''
-		Django settings
-	'''
-	settings.INSTALLED_APPS.append('paipage')
+	## Django settings
 	settings.STATICFILES_DIRS.extend(config.static_dirs)
 	settings.SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
