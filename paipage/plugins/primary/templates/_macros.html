@@ -13,14 +13,8 @@
 	</a>
 
 	{% if request.user.is_staff %}
-	<a class="link-white" href="/adminka/structure">
-		<span class="glyphicon glyphicon-equalizer"></span> Structure
-	</a>
-	{% endif %}
-
-	{% if request.user.is_superuser %}
-	<a class="link-white" href="/admin/">
-		<span class="glyphicon glyphicon-th-list"></span> Database
+	<a class="link-white" href="/adminka/">
+		<span class="glyphicon glyphicon-cog"></span> Settings
 	</a>
 	{% endif %}
 

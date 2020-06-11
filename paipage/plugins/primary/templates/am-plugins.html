@@ -1,0 +1,109 @@
+{% extends "am-lo.html" %}
+
+{% block title %}Plugins{% endblock %}
+
+{% block meta %}
+{{ super() }}
+<style type="text/css">
+	.plugin-info {
+		display: block;
+		float: left;
+		width: 100%;
+		margin-bottom: 16px;
+		background-color: white;
+	}
+	.plugin-head {
+		display: block;
+		float: left;
+		width: 100%;
+		font-size: 24px;
+		padding-left: 16px;
+		padding-bottom: 8px;
+	}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="col-xs-12 page-main">
+	<h1>Plugins</h1>
+	<div class="page-main-content">
+		<div id="content" class="col-xs-12"></div>
+		<div id="warning" class="col-xs-12"></div>
+	</div>
+</div>
+
+<script type="text/javascript">
+const $content = $('#content');
+const $warning = $('#warning');
+const plugins_primary = ['primary'];
+
+function warning(text) {
+	let result = `
+<div class="alert alert-danger">
+	<span class="glyphicon glyphicon-alert"></span> ${text}
+</div>`;
+	$warning.append(result);
+}
+
+function describePlugin(plugin_info) {
+	console.log(plugin_info);
+	let description = 'No description provided.';
+	if (plugin_info.description) {
+		description = plugin_info.description;
+	}
+	let enabled = `<b>Is enabled:</b> ${plugin_info.enabled}`;
+	if (plugins_primary.includes(plugin_info.name)) {
+		enabled = 'Base plugin';
+	}
+	let provides = '';
+	if (plugin_info.template_layout_list.length > 0) {
+		provides += `<b>Layouts:</b> ${plugin_info.template_layout_list.join(', ')} `;
+	}
+	if (plugin_info.template_page_list.length > 0) {
+		provides += `<b>Pages:</b> ${plugin_info.template_page_list.join(', ')} `;
+	}
+	// if (provides.length > 0) {
+	// 	provides = 'Provided templates: ' + provides;
+	// }
+	return `
+<div class="plugin-info">
+<div class="plugin-head"><i>${plugin_info.name}:</i> ${plugin_info.title}</div>
+<div class="plugin-body">
+	<div class="col-xs-12"><p>${description}</p></div>
+	<div class="col-xs-12 col-md-6">
+	<p><b>Version:</b> ${plugin_info.version}</p>
+	<p><b>Author:</b> ${plugin_info.author}</p>
+	</div>
+	<div class="col-xs-12 col-md-6">
+	<p><b>Path:</b> ${plugin_info.path}</p>
+	<p>${enabled}</p>
+	</div>
+	<div class="col-xs-12">${provides}</div>
+</div>
+</div>`;
+}
+
+function buildContent() {
+	let result = '';
+	Object.keys(plugin_installed).forEach(function(name) {
+		const plugin_info = plugin_installed[name];
+		result += describePlugin(plugin_info);
+	});
+	$content.html(result);
+}
+
+$(document).ready(function() {
+	Object.keys(plugin_installed).forEach(function(name) {
+		plugin_installed[name].enabled = false;
+	});
+	plugin_enabled.forEach(function(name) {
+		if (plugin_installed[name]) {
+			plugin_installed[name].enabled = true;
+		} else {
+			warning(`Enabled plugin <b>"${name}"</b> is not installed!`);
+		}
+	});
+	buildContent();
+});
+</script>
+{% endblock %}

@@ -71,26 +71,50 @@ def configurate(
 	config.logger = logger
 
 
-def attr2key(src, dst, src_name, dst_name=None):
+class Plugin():
+	serialise = [
+		'title', 'description', 'version', 'license', 'author', 'contact',
+		'name', 'path', 'template_page_list', 'template_layout_list',
+	]
+
+	def __init__(self, plugin_name, plugin_dir):
+		self.title = '_none_'
+		self.description = '_none_'
+		self.version = '_unknown_'
+		self.license = '_unknown_'
+		self.author = '_unknown_'
+		self.contact = '_unknown_'
+		self.name = plugin_name
+		self.path = plugin_dir
+		self.template_page_list = []
+		self.template_layout_list = []
+		self.template_handlers = {}
+
+	def as_dict(self):
+		return {key: getattr(self, key) for key in self.serialise}
+
+
+def attr2attr(src, dst, src_name, dst_name=None):
 	if dst_name is None:
 		dst_name = src_name
 	if hasattr(src, src_name):
-		dst[dst_name] = getattr(src, src_name)
+		setattr(dst, dst_name, getattr(src, src_name))
 
 
 def load_plugin_code(plugin_info):
-	plugin_name = plugin_info['name']
-	plugin_dir = plugin_info['path']
+	plugin_name = plugin_info.name
+	plugin_dir = plugin_info.path
 	code_file = os.path.join(plugin_dir, '__init__.py')
 	if os.path.exists(code_file):
 		module_name = f'pai_plugin_{plugin_name}'
 		module = importlib.machinery.SourceFileLoader(module_name, code_file).load_module()
-		attr2key(module, plugin_info, 'template_handlers')
-		attr2key(module, plugin_info, '__title__', 'title')
-		attr2key(module, plugin_info, '__version__', 'version')
-		attr2key(module, plugin_info, '__license__', 'license')
-		attr2key(module, plugin_info, '__author__', 'author')
-		attr2key(module, plugin_info, '__contact__', 'contact')
+		attr2attr(module, plugin_info, 'template_handlers')
+		attr2attr(module, plugin_info, '__title__', 'title')
+		attr2attr(module, plugin_info, '__version__', 'version')
+		attr2attr(module, plugin_info, '__license__', 'license')
+		attr2attr(module, plugin_info, '__author__', 'author')
+		attr2attr(module, plugin_info, '__contact__', 'contact')
+		attr2attr(module, plugin_info, 'description', 'description')
 
 
 def collect_plugins(search_dir):
@@ -102,18 +126,7 @@ def collect_plugins(search_dir):
 		if not os.path.isdir(plugin_dir):
 			continue
 
-		plugin_info = {
-			'title': '_unknown_',
-			'version': '_unknown_',
-			'license': '_unknown_',
-			'author': '_unknown_',
-			'contact': '_unknown_',
-			'name': plugin_name,
-			'path': plugin_dir,
-			'template_page_list': [],
-			'template_layout_list': [],
-			'template_handlers': {}
-		}
+		plugin_info = Plugin(plugin_name, plugin_dir)
 
 		# Load list of templates
 		location = os.path.join(plugin_dir, 'templates')
@@ -121,10 +134,10 @@ def collect_plugins(search_dir):
 			for filename in os.listdir(location):
 				match = re.findall(const.RE_PG_FILE, filename)
 				if len(match) == 1:
-					plugin_info['template_page_list'].append(match[0])
+					plugin_info.template_page_list.append(match[0])
 				match = re.findall(const.RE_LO_FILE, filename)
 				if len(match) == 1:
-					plugin_info['template_layout_list'].append(match[0])
+					plugin_info.template_layout_list.append(match[0])
 
 		load_plugin_code(plugin_info)
 
@@ -149,7 +162,7 @@ def enable_plugins():
 		if plugin_name not in config.plugin_installed:
 			raise ValueError(f'Missing enabled plugin "{plugin_name}"')
 		plugin_info = config.plugin_installed[plugin_name]
-		plugin_dir = plugin_info['path']
+		plugin_dir = plugin_info.path
 
 		location = os.path.join(plugin_dir, 'templates')
 		if os.path.exists(location):
@@ -161,15 +174,15 @@ def enable_plugins():
 
 		add_common_css(plugin_dir, plugin_name, 'main.css')
 
-		for name in plugin_info['template_page_list']:
+		for name in plugin_info.template_page_list:
 			if name not in config.template_page_list:
 				config.template_page_list.append(name)
 
-		for name in plugin_info['template_layout_list']:
+		for name in plugin_info.template_layout_list:
 			if name not in config.template_layout_list:
 				config.template_layout_list.append(name)
 
-		config.template_handlers.update(plugin_info['template_handlers'])
+		config.template_handlers.update(plugin_info.template_handlers)
 
 
 def configurate_final():

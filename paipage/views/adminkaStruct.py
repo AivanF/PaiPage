@@ -4,11 +4,11 @@ __contact__ = 'projects@aivanf.com'
 
 import json
 
-from django.shortcuts import get_object_or_404
 from django.views import View
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.admin.views.decorators import staff_member_required
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 
 from paipage import config
@@ -18,7 +18,7 @@ from paipage.models import Page, PageText
 from .params import Params
 
 
-class StructureView(View):
+class AdminkaStructureView(View):
 	@method_decorator(staff_member_required)
 	def get(self, request):
 		params = Params(request)
