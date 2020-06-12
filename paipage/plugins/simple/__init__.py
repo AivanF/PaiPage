@@ -23,13 +23,12 @@ class PgContents(PgNested):
 		})
 		text = ''
 		if len(self.text.text_short) > 1:
-			text = self.text.text_short + '<br>'
+			text = self.text.text_short
 
 		template = f'''
 {{% import "_utils.html" as utils with context %}}
-{text}
 {{{{ utils.page_contents(children, 2) }}}}
-<br><br>
+{text}
 '''
 		return self.params.render_str(template)
 

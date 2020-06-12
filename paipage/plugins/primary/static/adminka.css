@@ -17,6 +17,9 @@
 .clickable:hover {
 	background: rgba(255,255,63,0.3);
 }
+.selected > .clickable {
+	background: rgba(127,255,63,0.3);
+}
 .clickable.selected {
 	background: rgba(127,255,63,0.3);
 }

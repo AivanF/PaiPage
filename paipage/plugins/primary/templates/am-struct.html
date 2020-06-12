@@ -6,14 +6,47 @@
 {{ super() }}
 <style type="text/css">
 	.record {
+		position: relative;
 		padding-top: 12px;
+		z-index: 1;
 	}
 	.record .record {
 		padding-top: 4px;
 		padding-left: 14px;
-		border-left: 2px dashed DarkGray;
+	} 
+	.record .record:before {
+		content: "";
+		display: block;
+		position: absolute;
+		top: 14px;
+		bottom: 0px;
+		left: 0px;
+		width: 12px;
+		/*background-color: hsla(100,60%,50%,0.2);*/
+		border-top: 1px solid DarkGray;
+		z-index: -1;
 	}
-	.clickable:hover ~ .record, .selected ~ .record {
+	.record .record:after {
+		content: "";
+		display: block;
+		position: absolute;
+		top: 0px;
+		bottom: 0px;
+		left: 0px;
+		width: 32px;
+		/*background-color: hsla(0,60%,50%,0.2);*/
+		border-left: 1px solid DarkGray;
+		z-index: -1;
+	}
+	.record:last-child:after {
+		top: 0px;
+		bottom: unset;
+		height: 14px;
+	}
+	.record-parent {
+		/*margin-top: 4px;*/
+	}
+	.clickable:hover ~ .record, .selected > .record {
 		background: rgba(0,95,191,0.1);
 	}
 	.button-box {
@@ -309,8 +342,12 @@ function buildSection(keys, shift) {
 	// TODO: order pages / use specified order
 	keys.forEach(function (pk) {
 		let page = all_pages[pk];
-		result += '<div class="record">';
-		result += `<span id="page-${pk}" class="clickable" onclick="event.stopPropagation(); clickRecord(${pk});"><b>/${page.url}</b></span>`;
+		result += `
+<div id="page-${pk}" class="record record-${page.children.length>0?'parent':'leaf'}">
+<span class="clickable"
+	onclick="event.stopPropagation(); clickRecord(${pk});">
+<b>/${page.url}</b>
+</span>`;
 
 		// TODO: add red color if not all
 		result += ` (${page.lang_no ? 'c+' : ''}${Object.keys(page.titles).length}/${language_selectable.length})`;
@@ -319,6 +356,7 @@ function buildSection(keys, shift) {
 
 		result += ` ${page.template_page ? page.template_page : '_'} :`;
 		result += ` ${page.template_layout ? page.template_layout : '_'}`;
+
 		if (page.children) {
 			result += buildSection(page.children, shift+1);
 		}
