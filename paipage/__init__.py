@@ -4,5 +4,5 @@ __contact__ = 'projects@aivanf.com'
 
 default_app_config = 'paipage.apps.PaiPaiConfig'
 
-from .config import config, configurate
+from .config import config, configure
 from .templating import TemplateHandler

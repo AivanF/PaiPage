@@ -4,11 +4,11 @@ __contact__ = 'projects@aivanf.com'
 
 from django.apps import AppConfig
 
-from .config import configurate_final
+from .config import configure_final
 
 
 class PaiPaiConfig(AppConfig):
     name = 'paipage'
 
     def ready(self):
-    	configurate_final()
+    	configure_final()

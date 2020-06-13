@@ -12,8 +12,8 @@ from .jinja2 import make_env
 
 __all__ = [
 	'config',
-	'configurate',
-	'configurate_final',
+	'configure',
+	'configure_final',
 ]
 
 
@@ -27,7 +27,7 @@ config = Config()
 PAIPAGE_PATH = os.path.dirname(sys.modules['paipage'].__file__)
 
 
-def configurate(
+def configure(
 		site_name,
 		language_default,
 		language_available,
@@ -185,7 +185,7 @@ def enable_plugins():
 		config.template_handlers.update(plugin_info.template_handlers)
 
 
-def configurate_final():
+def configure_final():
 	from django.conf import settings
 	from .models import GlobalSetting
 
