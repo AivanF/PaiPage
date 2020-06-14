@@ -1,4 +1,4 @@
-Django==2.2.5
+Django==2.2.13
 Jinja2==2.10.1
 
 cachetools
