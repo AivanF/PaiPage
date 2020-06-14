@@ -24,8 +24,6 @@ class Config:
 
 config = Config()
 
-PAIPAGE_PATH = os.path.dirname(sys.modules['paipage'].__file__)
-
 
 def configure(
 		site_name,
@@ -190,7 +188,9 @@ def configure_final():
 	from .models import GlobalSetting
 
 	## Plugins loading
-	collect_plugins(PAIPAGE_PATH)
+	for app in settings.INSTALLED_APPS:
+		app_path = os.path.dirname(sys.modules[app].__file__)
+		collect_plugins(app_path)
 	for path in config.plugin_paths:
 		collect_plugins(path)
 
