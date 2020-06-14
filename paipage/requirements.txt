@@ -1,0 +1,5 @@
+Django==2.2.5
+Jinja2==2.10.1
+
+cachetools
+requests
