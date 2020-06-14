@@ -1,13 +1,92 @@
+__author__ = 'AivanF'
+__copyright__ = 'Copyright 2020, AivanF'
+__contact__ = 'projects@aivanf.com'
+
+import sys
+import operator
 
 from django.conf import settings
 
 
-def dedupe(items):
+def is_migration():
+	return 'makemigrations' in sys.argv or 'migrate' in sys.argv
+
+
+class SettingObj:
+	_serialise = []
+	_repr = []
+	_init_done = False
+
+	def __init__(self):
+		self._init_done = True
+
+	def __setattr__(self, name, value):
+		if self._init_done:
+			if name not in self.__dict__:
+				raise ValueError(f'Trying to set attr "{name}" for {self}')
+		self.__dict__[name] = value
+
+	def as_dict(self):
+		return {key: getattr(self, key) for key in self._serialise}
+
+	def __repr__(self):
+		fileds = ', '.join(
+			list(map(lambda key: f'{key}={self.__dict__[key]!r}', self._repr))
+		)
+		return f'{self.__class__.__name__}({fileds})'
+
+
+class PluginInfo(SettingObj):
+	_serialise = [
+		'title', 'description', 'version', 'license', 'author', 'contact',
+		'name', 'path', 'template_page_list', 'template_layout_list',
+	]
+	_repr = ['name', 'version']
+
+	def __init__(self, plugin_name, plugin_dir):
+		self.title = '_none_'
+		self.description = '_none_'
+		self.version = '_unknown_'
+		self.license = '_unknown_'
+		self.author = '_unknown_'
+		self.contact = '_unknown_'
+		self.name = plugin_name
+		self.path = plugin_dir
+		self.template_page_list = []
+		self.template_layout_list = []
+		self.template_handlers = {}
+		self._init_done = True
+
+
+class PluginMeta(SettingObj):
+	_serialise = [
+		'name', 'enabled',
+	]
+	_repr = ['name', 'enabled']
+
+	def __init__(self, name, enabled=False):
+		self.name = name
+		self.enabled = enabled
+		self._init_done = True
+
+
+def dedupe(items, key=None, attr=None):
+	if isinstance(key, str):
+		key_getter = lambda x: x[key]
+	elif key is None:
+		if attr is not None:
+			key_getter = operator.attrgetter(attr)
+		else:
+			key_getter = lambda x: x
+	else:
+		key_getter = key
+
 	seen = set()
 	for item in items:
-		if item not in seen:
+		_key = key_getter(item)
+		if _key not in seen:
 			yield item
-			seen.add(item)
+			seen.add(_key)
 
 
 RE_PG_FILE = r'^(pg-.+)\.html$'

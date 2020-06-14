@@ -135,6 +135,7 @@ class GlobalSetting(models.Model):
 	key = models.CharField(max_length=64, null=False, unique=True)
 	value = models.TextField(null=False, blank=True)
 	updated = models.DateTimeField(auto_now=True)
+	updated_by = models.ForeignKey(User, on_delete=models.PROTECT, null=False)
 
 	@classmethod
 	def get(cls, key, default=''):
@@ -145,12 +146,15 @@ class GlobalSetting(models.Model):
 			return default
 
 	@classmethod
-	def set(cls, key, value):
+	def set(cls, key, value, by):
+		assert isinstance(value, str)
+		assert isinstance(by, User)
 		obj = cls.objects.filter(key=key).first()
 		if obj is not None:
 			obj.value = value
 		else:
 			obj = cls(key=key, value=value)
+		obj.updated_by = by
 		obj.save()
 
 	@classmethod
@@ -162,5 +166,15 @@ class GlobalSetting(models.Model):
 			return default
 
 	@classmethod
-	def set_json(cls, key, value):
-		cls.set(key, json.dumps(value))
+	def set_json(cls, key, value, by):
+		cls.set(key, json.dumps(value), by=by)
+
+	def __str__(self):
+		return repr(self)
+
+	def __repr__(self):
+		value = self.value
+		if len(value) > 80:
+			value = value[:64] + '...'
+		return f'{self.pk}. GlobalSetting("{self.key}", {self.updated.strftime(dater)}) = "{value}"'
+

@@ -6,6 +6,8 @@ __copyright__ = 'Copyright 2020, AivanF'
 __contact__ = 'projects@aivanf.com'
 description = 'Provides simple yet handy templates.'
 
+from django.http import HttpResponse
+
 from paipage import TemplateHandler
 
 
@@ -33,7 +35,7 @@ class PgContents(PgNested):
 		return self.params.render_str(template)
 
 	def get_full(self):
-		return self.params.render(self.template)
+		return HttpResponse(self.params.render_file(self.template))
 
 
 template_handlers = {

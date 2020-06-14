@@ -4,8 +4,6 @@ __contact__ = 'projects@aivanf.com'
 
 import json
 
-from django.http import HttpResponse
-
 from paipage import config
 from paipage.const import LANG_KEY, PATH_INDEX, HTML_EXT
 from paipage.models import Page
@@ -66,7 +64,7 @@ class Params():
 		html = template_obj.render(**self.prepare())
 		return html
 
-	def render(self, template_name):
+	def render_file(self, template_name):
 		template_obj = config.jinja2.get_template(template_name + HTML_EXT)
 		html = template_obj.render(**self.prepare())
-		return HttpResponse(html)
+		return html

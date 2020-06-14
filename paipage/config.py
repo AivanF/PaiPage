@@ -8,6 +8,7 @@ import shutil
 import re
 
 from . import const
+from .const import PluginInfo, PluginMeta
 from .jinja2 import make_env
 
 __all__ = [
@@ -17,9 +18,32 @@ __all__ = [
 ]
 
 
-class Config:
+class Config(const.SettingObj):
+	_serialise = [
+		'site_name',
+		# Default values that may be overriden by DB settings
+		'language_default', 'language_available',
+		'template_page_default', 'template_layout_default',
+		'coded_plugin_enabled', 'plugins_meta',
+		# Settings
+		'plugin_paths', 'logger',
+		# Generated values
+		'plugins_installed',
+		'template_page_list', 'template_layout_list', 'template_handlers', 'jinja2',
+		'common_css', 'template_dirs', 'static_dirs',
+	]
+	_repr = ['site_name']
+
 	def __init__(self):
-		pass
+		for name in self._serialise:
+			self.__dict__[name] = None
+		self._init_done = True
+
+	def get_plugin_meta_plain(self):
+		return [
+			plugin_meta.as_dict()
+			for plugin_meta in self.plugins_meta
+		]
 
 
 config = Config()
@@ -55,7 +79,6 @@ def configure(
 	config.language_default = language_default
 
 	config.plugin_paths = plugin_paths
-	config.plugin_installed = {}
 	config.coded_plugin_enabled = plugin_enabled
 
 	if logger is None:
@@ -67,29 +90,6 @@ def configure(
 		console_handler.setFormatter(formatter)
 		logger.addHandler(console_handler)
 	config.logger = logger
-
-
-class Plugin():
-	serialise = [
-		'title', 'description', 'version', 'license', 'author', 'contact',
-		'name', 'path', 'template_page_list', 'template_layout_list',
-	]
-
-	def __init__(self, plugin_name, plugin_dir):
-		self.title = '_none_'
-		self.description = '_none_'
-		self.version = '_unknown_'
-		self.license = '_unknown_'
-		self.author = '_unknown_'
-		self.contact = '_unknown_'
-		self.name = plugin_name
-		self.path = plugin_dir
-		self.template_page_list = []
-		self.template_layout_list = []
-		self.template_handlers = {}
-
-	def as_dict(self):
-		return {key: getattr(self, key) for key in self.serialise}
 
 
 def attr2attr(src, dst, src_name, dst_name=None):
@@ -124,7 +124,7 @@ def collect_plugins(search_dir):
 		if not os.path.isdir(plugin_dir):
 			continue
 
-		plugin_info = Plugin(plugin_name, plugin_dir)
+		plugin_info = PluginInfo(plugin_name, plugin_dir)
 
 		# Load list of templates
 		location = os.path.join(plugin_dir, 'templates')
@@ -139,7 +139,7 @@ def collect_plugins(search_dir):
 
 		load_plugin_code(plugin_info)
 
-		config.plugin_installed[plugin_name] = plugin_info
+		config.plugins_installed[plugin_name] = plugin_info
 
 
 def enable_plugins():
@@ -156,10 +156,14 @@ def enable_plugins():
 			shutil.copyfile(src, os.path.join(plugin_dir, 'static', res))
 			config.common_css.append(res)
 
-	for plugin_name in config.plugin_enabled:
-		if plugin_name not in config.plugin_installed:
-			raise ValueError(f'Missing enabled plugin "{plugin_name}"')
-		plugin_info = config.plugin_installed[plugin_name]
+	for plugins_meta in config.plugins_meta:
+		if not plugins_meta.enabled:
+			continue
+		plugin_name = plugins_meta.name
+		if plugin_name not in config.plugins_installed:
+			# raise ValueError(f'Missing enabled plugin "{plugin_name}"')
+			continue
+		plugin_info = config.plugins_installed[plugin_name]
 		plugin_dir = plugin_info.path
 
 		location = os.path.join(plugin_dir, 'templates')
@@ -184,10 +188,14 @@ def enable_plugins():
 
 
 def configure_final():
+	if const.is_migration():
+		return
+
 	from django.conf import settings
 	from .models import GlobalSetting
 
 	## Plugins loading
+	config.plugins_installed = {}
 	for app in settings.INSTALLED_APPS:
 		app_path = os.path.dirname(sys.modules[app].__file__)
 		collect_plugins(app_path)
@@ -195,13 +203,31 @@ def configure_final():
 		collect_plugins(path)
 
 	## Plugins enabling
-	saved_plugin_enabled = GlobalSetting.get_json('plugin_enabled', [])
-	if saved_plugin_enabled:
-		config.plugin_enabled = saved_plugin_enabled
+	saved_plugins = GlobalSetting.get_json('plugins_meta', [])
+	if not saved_plugins:
+		saved_plugins = [
+			{'name': name, 'enabled': True}
+			for name in config.coded_plugin_enabled
+		]
+
+	if saved_plugins:
+		saved_plugins = [
+			PluginMeta(**kwargs) for kwargs in saved_plugins
+		]
 	else:
-		config.plugin_enabled = config.coded_plugin_enabled
-	config.plugin_enabled = ['primary'] + config.plugin_enabled
-	config.plugin_enabled = list(const.dedupe(config.plugin_enabled))
+		saved_plugins = [
+			PluginMeta(name, True)
+			for name in config.coded_plugin_enabled
+		]
+
+	config.plugins_meta = []
+	config.plugins_meta.append(PluginMeta('primary', True))
+	config.plugins_meta.extend(saved_plugins)
+	config.plugins_meta.extend(
+		PluginMeta(name, False)
+		for name in config.plugins_installed
+	)
+	config.plugins_meta = list(const.dedupe(config.plugins_meta, attr='name'))
 
 	enable_plugins()
 

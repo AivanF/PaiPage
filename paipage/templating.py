@@ -2,6 +2,7 @@ __author__ = 'AivanF'
 __copyright__ = 'Copyright 2020, AivanF'
 __contact__ = 'projects@aivanf.com'
 
+from django.http import HttpResponse
 
 from paipage.const import HTML_EXT
 from paipage import config
@@ -31,7 +32,7 @@ class TemplateHandler():
 
 	def get_full(self):
 		# Must return django.http.HttpResponse
-		return self.params.render(self.template)
+		return HttpResponse(self.params.render_file(self.template))
 
 	def __repr__(self):
 		return f'{self.__class__.__name__} for "{self.page.url}" {self.lang}'
