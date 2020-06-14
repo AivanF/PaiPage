@@ -6,6 +6,11 @@ __contact__ = 'projects@aivanf.com'
 from paipage.const import HTML_EXT
 from paipage import config
 
+__all__ = [
+	'TemplateHandler',
+	'should_show', 'render_page_short', 'render_page_full',
+]
+
 
 class TemplateHandler():
 	def __init__(self, template, page, text, params):
@@ -28,46 +33,50 @@ class TemplateHandler():
 		# Must return django.http.HttpResponse
 		return self.params.render(self.template)
 
+	def __repr__(self):
+		return f'{self.__class__.__name__} for "{self.page.url}" {self.lang}'
 
-def ensure_pg(page):
+
+def _ensure_pg(page):
 	template = page.template
 	if not template:
 		template = config.template_page_default
 	return template
 
 
-def ensure_lo(page):
+def _ensure_lo(page):
 	layout = page.layout
 	if not layout:
 		layout = config.template_layout_default
 	return layout
 
 
-def should_show(params, page, text):
-	template = ensure_pg(page)
+def _get_handler(params, page, text):
+	template = _ensure_pg(page)
 	if template in config.template_handlers:
-		handler = config.template_handlers[template](
-			template, page, text, params
-		)
-		return handler.should_show()
+		handler_class = config.template_handlers[template]
+	else:
+		handler_class = TemplateHandler
 
-	return len(text.text_full) > 1
+	return handler_class(
+		template, page, text, params
+	)
+
+
+def should_show(params, page, text):
+	handler = _get_handler(params, page, text)
+	return handler.should_show()
 
 
 def render_page_short(params, page, text):
-	template = ensure_pg(page)
-	if template in config.template_handlers:
-		handler = config.template_handlers[template](
-			template, page, text, params
-		)
-		return handler.get_short()
-
-	return text.text_short
+	handler = _get_handler(params, page, text)
+	return handler.get_short()
 
 
 def render_page_full(params, page, text):
-	template = ensure_pg(page)
-	layout = ensure_lo(page)
+	handler = _get_handler(params, page, text)
+	template = handler.template
+	layout = _ensure_lo(page)
 	layout += HTML_EXT
 
 	params.update({
@@ -77,11 +86,4 @@ def render_page_full(params, page, text):
 		'children': list(page.children.all()),
 		'layout_template': layout,
 	})
-
-	if template in config.template_handlers:
-		handler = config.template_handlers[template](
-			template, page, text, params
-		)
-		return handler.get_full()
-
-	return params.render(template)
+	return handler.get_full()
