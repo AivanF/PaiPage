@@ -3,7 +3,6 @@
 
 *.pyc
 .idea/
-*migrations/
 
 *.log
 *.sqlite3
