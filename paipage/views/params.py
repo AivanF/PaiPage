@@ -34,6 +34,7 @@ class Params():
 			'layout_template': config.template_layout_default + HTML_EXT,
 			'should_show': self._should_show,
 			'render_page_short': self._render_page_short,
+			'get_handler': self._get_handler,
 		}
 		self.selectables = {}
 		self.scripted = {'selectables': self.selectables}
@@ -49,6 +50,9 @@ class Params():
 
 	def _render_page_short(self, page, text):
 		return templating.render_page_short(self, page, text)
+
+	def _get_handler(self, page, text):
+		return templating.get_handler(self, page, text)
 
 	def update(self, adict):
 		self.params.update(adict)

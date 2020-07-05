@@ -20,7 +20,7 @@
 		<li>
 			{{ txt.title }}
 			{% if level < max_level -%}
-			{{ page_contents(page.children.all(), max_level, level+1) }}
+			{{ page_contents(get_handler(page, txt).get_children(), max_level, level+1) }}
 			{%- endif %}
 		</li>
 		{%- if should_show(page,txt) %}</a>{% endif %}

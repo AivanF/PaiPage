@@ -65,6 +65,11 @@ class Page(models.Model):
 			'titles': {},
 		}
 
+	@property
+	@cachetools.cached(cache=cachetools.Cache(maxsize=32))
+	def other_settings_(self):
+		return json.loads(self.other_settings)
+
 	@classmethod
 	@cachetools.cached(cache=cachetools.TTLCache(maxsize=8, ttl=10))
 	def get_all(cls):

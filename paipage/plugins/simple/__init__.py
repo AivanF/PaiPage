@@ -6,9 +6,14 @@ __copyright__ = 'Copyright 2020, AivanF'
 __contact__ = 'projects@aivanf.com'
 description = 'Provides simple yet handy templates.'
 
-from django.http import HttpResponse
+import json
+
+import cachetools
+
+from django.shortcuts import get_object_or_404
 
 from paipage import TemplateHandler
+from paipage.models import Page
 
 
 class PgLabeled(TemplateHandler):
@@ -27,14 +32,53 @@ class PgLabeled(TemplateHandler):
 		},
 	]
 
+	def get_short(self):
+		result = self.text.text_short
+		label = self.page.other_settings_.get('label', '')
+		if len(label) > 0:
+			result += f'<br>{label}'
+		return result
+
 
 class PgNested(TemplateHandler):
-	def get_children(self):
-		# TODO: filter by lang
-		return self.page.children
+	@staticmethod
+	@cachetools.cached(cache=cachetools.TTLCache(maxsize=16, ttl=10))
+	def get_children_for(page):
+		cluster_settings = json.loads(page.other_settings)
+		target = cluster_settings.get('target', None)
+		if target is None:
+			target = page
+		else:
+			target = get_object_or_404(Page, pk=target)
+
+		# TODO: Filter by lang
+		result = list(target.children.all())
+
+		# Filter by tags if set
+		embrace = lambda x: f' {x} '
+		tags = cluster_settings.get('tags', '')
+		tags = [embrace(tag) for tag in tags.split(' ') if len(tag) > 0]
+		for tag in tags:
+			result = [
+				pg for pg in result
+				if tag in embrace(pg.other_settings_.get('tags', ''))
+			]
+
+		# Order by label
+		result.sort(
+			reverse=cluster_settings.get('desc', True),
+			key=lambda pg: pg.other_settings_.get('label', '')
+		)
+
+		# Limit by count
+		count = cluster_settings.get('count', 0)
+		if count > 0:
+			result = result[:count]
+
+		return result
 
 	def should_show(self):
-		return self.get_children.count() > 0
+		return len(self.get_children()) > 0
 
 
 class PgCluster(PgNested):
@@ -66,13 +110,6 @@ class PgCluster(PgNested):
 			'default': True,
 		},
 	]
-
-	def get_children(self):
-		# TODO: filter by lang
-		# TODO: filter by tags if set
-		# TODO: order by label
-		# TODO: limit by count
-		return self.page.children
 
 
 class PgContents(PgNested):

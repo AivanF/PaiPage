@@ -2,6 +2,8 @@ __author__ = 'AivanF'
 __copyright__ = 'Copyright 2020, AivanF'
 __contact__ = 'projects@aivanf.com'
 
+import cachetools
+
 from django.http import HttpResponse
 
 from paipage.const import HTML_EXT
@@ -25,6 +27,14 @@ class TemplateHandler():
 		self.params = params
 		self.lang = params['lang']
 		self.request = params['request']
+
+	@staticmethod
+	@cachetools.cached(cache=cachetools.TTLCache(maxsize=16, ttl=10))
+	def get_children_for(page):
+		return list(page.children.all())
+
+	def get_children(self):
+		return self.get_children_for(self.page)
 
 	def should_show(self):
 		return len(self.text.text_full) > 1
@@ -55,7 +65,7 @@ def _ensure_lo(page):
 	return layout
 
 
-def _get_handler(params, page, text):
+def get_handler(params, page, text):
 	template = _ensure_pg(page)
 	if template in config.template_handlers:
 		handler_class = config.template_handlers[template]
@@ -68,17 +78,17 @@ def _get_handler(params, page, text):
 
 
 def should_show(params, page, text):
-	handler = _get_handler(params, page, text)
+	handler = get_handler(params, page, text)
 	return handler.should_show()
 
 
 def render_page_short(params, page, text):
-	handler = _get_handler(params, page, text)
+	handler = get_handler(params, page, text)
 	return handler.get_short()
 
 
 def render_page_full(params, page, text):
-	handler = _get_handler(params, page, text)
+	handler = get_handler(params, page, text)
 	template = handler.template
 	layout = _ensure_lo(page)
 	layout += HTML_EXT
@@ -88,7 +98,7 @@ def render_page_full(params, page, text):
 		'handler': handler,
 		'text': text,
 		'upper': page.upper,
-		'children': list(page.children.all()),
+		'children': handler.get_children(),
 		'layout_template': layout,
 	})
 	return handler.render_full()

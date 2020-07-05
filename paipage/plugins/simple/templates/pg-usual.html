@@ -9,5 +9,12 @@
 
 	<div class="page-main-content">
 		{{ text.text_full |safe }}
+		{% set label = current.other_settings_.get('label', '') -%}
+		{% if label|length > 0 -%}
+		<br><br>
+		<div class="text-center">
+			<span class="date">{{ label }}</span>
+		</div>
+		{%- endif %}
 	</div>
 {% endblock %}
