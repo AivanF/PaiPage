@@ -93,6 +93,7 @@ const PREFIX_PAGE_EDITOR = 'form-pg-edit-';
 const $blind = $('#blind');
 
 const ACTION_EDIT = 'edit';
+const ACTION_EDITSP = 'edit-special';
 const ACTION_CREATE = 'create';
 const ACTION_VIEW = 'view';
 
@@ -104,12 +105,13 @@ const formPage = PAF.preprocessForm({
 			name: 'Address',
 			max_len: '250',
 			desc: '',
-		// }, {
-		// 	type: 'bool',
-		// 	code: 'public',
-		// 	on: 'yes',
-		// 	off: 'no',
-		// 	default: true,
+		}, {
+			type: 'bool',
+			code: 'public',
+			name: 'Public',
+			on: 'yes',
+			off: 'no',
+			default: true,
 		}, {
 			type: 'select',
 			subtype: 'page',
@@ -146,6 +148,22 @@ const formPage = PAF.preprocessForm({
 	],
 	type: 'page',
 });
+
+
+// handler_forms is a dict with element arrays initially
+Object.keys(handler_forms).map(function(key, index) {
+	handler_forms[key] = PAF.preprocessForm({
+		elements: handler_forms[key],
+		type: key,
+	});
+});
+
+
+function pageSpecialForm(page) {
+	return handler_forms[
+		page.template_page ? page.template_page : default_page
+	];
+}
 
 
 function checkNotChild(initial_pk, compared_pk) {
@@ -238,16 +256,12 @@ function smallButton(text, onclick, url) {
 }
 
 
-function savePageEdit(pk) {
-	let form = PAF.validateForm(formPage, PREFIX_PAGE_EDITOR, false);
-	if (!form)
-		return;
-
+function uploadPage() {
 	$blind.show();
 	$.ajax({
 		url: `/adminka/page/${editing_page.pk < 0 ? 'create' : editing_page.pk}`,
 		method: 'POST',
-		data: JSON.stringify(form),
+		data: JSON.stringify(editing_page),
 		contentType: 'application/json',
 		dataType: 'json',
 		crossDomain: true
@@ -258,7 +272,10 @@ function savePageEdit(pk) {
 				all_pages[data.obj.pk] = data.obj;
 				editing_page = data.obj;
 			} else {
-				all_pages[editing_page.pk] = Object.assign(all_pages[editing_page.pk], form);
+				all_pages[editing_page.pk] = Object.assign(
+					all_pages[editing_page.pk],
+					editing_page
+				);
 			}
 			buildStruct();
 			clickRecord(editing_page.pk)
@@ -270,6 +287,45 @@ function savePageEdit(pk) {
 	}).always(function () {
 		$blind.hide();
 	});
+}
+
+
+function saveSpecialEdit(pk) {
+	const special_form = pageSpecialForm(editing_page);
+	let form = PAF.validateForm(special_form, PREFIX_PAGE_EDITOR, false);
+	if (!form)
+		return;
+
+	editing_page.other_settings = Object.assign(editing_page.other_settings, form);
+	uploadPage();
+}
+function buildSpecialEdit(pk, skipHist) {
+	editing_page = all_pages[pk];
+	const special_form = pageSpecialForm(editing_page);
+	let result = PAF.buildFormEdit(
+		special_form, editing_page.other_settings,
+		PREFIX_PAGE_EDITOR, false
+	);
+	result += smallButton('Save', `saveSpecialEdit(${pk})`);
+	result += smallButton('Cancel', `clickRecord(${pk})`);
+	$('#editor').html(result);
+	PAF.updateEditor();
+
+	cleanSelected();
+	$(`#page-${pk}`).addClass('selected');
+
+	if (skipHist) return;
+	const state = {action: ACTION_EDITSP, page: pk};
+	const args = $.param(state);
+	history.pushState(state, '', `${DOMAIN}?${args}`);
+}
+function savePageEdit(pk) {
+	let form = PAF.validateForm(formPage, PREFIX_PAGE_EDITOR, false);
+	if (!form)
+		return;
+
+	editing_page = Object.assign(editing_page, form);
+	uploadPage();
 }
 function buildPageEdit(pk, skipHist) {
 	editing_page = all_pages[pk];
@@ -308,12 +364,18 @@ function buildPageCreate(upper_pk, skipHist) {
 }
 function buildPageView(pk, skipHist) {
 	editing_page = null;
-	let page = all_pages[pk];
+	const page = all_pages[pk];
+	const special_form = pageSpecialForm(page);
 	let result = PAF.buildFormView(formPage, page);
+	if (special_form) {
+		result += PAF.buildFormView(special_form, page.other_settings);
+	}
 	result += smallButton('Visit', null, `/${page.url}`);
 	result += smallButton('Add subpage', `buildPageCreate(${pk})`);
 	result += smallButton('Edit Texts', null, `/adminka/page/${page.pk}`);
 	result += smallButton('Edit Settings', `buildPageEdit(${pk})`);
+	if (special_form)
+		result += smallButton('Edit Special', `buildSpecialEdit(${pk})`);
 	$('#editor').html(result);
 
 	cleanSelected();
@@ -387,6 +449,9 @@ function buildState(args) {
 	}
 	if (args.action == ACTION_EDIT && args.page) {
 		buildPageEdit(+args.page, true);
+	}
+	if (args.action == ACTION_EDITSP && args.page) {
+		buildSpecialEdit(+args.page, true);
 	}
 	if (args.action == ACTION_CREATE && args.upper) {
 		buildPageCreate(+args.upper, true);

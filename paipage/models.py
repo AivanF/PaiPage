@@ -36,6 +36,7 @@ class Page(models.Model):
 	public = models.BooleanField(default=True)
 	template = models.CharField(default='', max_length=256, null=False, blank=True)
 	layout = models.CharField(default='', max_length=256, null=False, blank=True)
+	other_settings = models.TextField(default='{}')
 
 	class Meta:
 		unique_together = ('upper', 'url',)
@@ -57,6 +58,7 @@ class Page(models.Model):
 			'template_page': self.template,
 			'template_layout': self.layout,
 			'upper': self.upper.pk if self.upper else None,
+			'other_settings': json.loads(self.other_settings),
 
 			'langs': [],
 			'lang_no': False,

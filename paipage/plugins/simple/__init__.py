@@ -11,10 +11,68 @@ from django.http import HttpResponse
 from paipage import TemplateHandler
 
 
+class PgLabeled(TemplateHandler):
+	form_elements = [
+		{
+			'type': 'str',
+			'max_len': '32',
+			'code': 'label',
+			'name': 'Label',
+		}, {
+			'type': 'str',
+			'max_len': '128',
+			'code': 'tags',
+			'name': 'Tags',
+			# TODO: add PAF type "words" to remove bad symbols
+		},
+	]
+
+
 class PgNested(TemplateHandler):
+	def get_children(self):
+		# TODO: filter by lang
+		return self.page.children
+
 	def should_show(self):
-		# TODO: return self.page.children.count() > 0, but check langs
-		return True
+		return self.get_children.count() > 0
+
+
+class PgCluster(PgNested):
+	form_elements = [
+		{
+			'type': 'select',
+			'subtype': 'page',
+			'allow_clear': True,
+			'code': 'target',
+			'name': 'Target page cluster',
+		}, {
+			'type': 'str',
+			'max_len': '128',
+			'code': 'tags',
+			'name': 'Tags filter',
+			# TODO: add PAF type "words" to remove bad symbols
+		}, {
+			'type': 'int',
+			'min': '0',
+			'code': 'count',
+			'name': 'Max count',
+			'desc': '0 value means no limit',
+		}, {
+			'type': 'bool',
+			'code': 'desc',
+			'name': 'Label order',
+			'on': 'descending',
+			'off': 'ascending',
+			'default': True,
+		},
+	]
+
+	def get_children(self):
+		# TODO: filter by lang
+		# TODO: filter by tags if set
+		# TODO: order by label
+		# TODO: limit by count
+		return self.page.children
 
 
 class PgContents(PgNested):
@@ -34,11 +92,9 @@ class PgContents(PgNested):
 '''
 		return self.params.render_str(template)
 
-	def get_full(self):
-		return HttpResponse(self.params.render_file(self.template))
-
 
 template_handlers = {
-	'pg-cluster': PgNested,
+	'pg-usual': PgLabeled,
+	'pg-cluster': PgCluster,
 	'pg-contents': PgContents,
 }

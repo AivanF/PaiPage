@@ -14,6 +14,9 @@ __all__ = [
 
 
 class TemplateHandler():
+	# PAF elements list with additional page settings
+	form_elements = None
+
 	def __init__(self, template, page, text, params):
 		# Argument list may be changed, don't override or use *args, **kwargs
 		self.template = template
@@ -30,7 +33,7 @@ class TemplateHandler():
 		# Must return HTML string
 		return self.text.text_short
 
-	def get_full(self):
+	def render_full(self):
 		# Must return django.http.HttpResponse
 		return HttpResponse(self.params.render_file(self.template))
 
@@ -82,9 +85,10 @@ def render_page_full(params, page, text):
 
 	params.update({
 		'current': page,
+		'handler': handler,
 		'text': text,
 		'upper': page.upper,
 		'children': list(page.children.all()),
 		'layout_template': layout,
 	})
-	return handler.get_full()
+	return handler.render_full()

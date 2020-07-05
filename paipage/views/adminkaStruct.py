@@ -26,6 +26,11 @@ class AdminkaStructureView(View):
 		params.scripted['language_selectable'] = list(config.language_available.keys())
 		params.scripted['default_page'] = config.template_page_default
 		params.scripted['default_layout'] = config.template_layout_default
+		params.scripted['handler_forms'] = {
+			key: handler.form_elements
+			for key, handler in config.template_handlers.items()
+			if handler.form_elements is not None
+		}
 		params.selectables['template_layout'] = config.template_layout_list
 		params.selectables['template_page'] = config.template_page_list
 		return HttpResponse(params.render_file('am-struct'))
@@ -43,6 +48,11 @@ class AdminkaPageView(View):
 		params.scripted['language_selectable'] = list(config.language_available.keys())
 		params.scripted['default_page'] = config.template_page_default
 		params.scripted['default_layout'] = config.template_layout_default
+		params.scripted['handler_forms'] = {
+			key: handler.form_elements
+			for key, handler in config.template_handlers.items()
+			if handler.form_elements is not None
+		}
 		params.selectables['language'] = params.scripted['language_selectable'] + [LANG_NO]
 		params.selectables['template_layout'] = config.template_layout_list
 		params.selectables['template_page'] = config.template_page_list
@@ -105,6 +115,7 @@ class AdminkaPageView(View):
 			page.layout = '' if page.layout is None else page.layout
 			page.template = j['template_page']
 			page.template = '' if page.template is None else page.template
+			page.other_settings = json.dumps(j['other_settings'])
 
 		if res['success']:
 			page.updated_by = request.user

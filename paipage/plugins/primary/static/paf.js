@@ -129,7 +129,11 @@ ElementViewHandlers['int'] = function (element, value) {
 };
 ElementViewHandlers['str'] = function (element, value) {
 	// can_copy = true;  // TODO: here!
-	return value;
+	if (exists(value)) {
+		return value;
+	} else {
+		return '[ undefined ]'
+	}
 };
 ElementViewHandlers['str2str'] = function (element, value) {
 	let result = '';
@@ -139,7 +143,9 @@ ElementViewHandlers['str2str'] = function (element, value) {
 	return result;
 };
 ElementViewHandlers['bool'] = function (element, value) {
-	return `${value}`;
+	const text_on = element.on || 'on';
+	const text_off = element.off || 'off';
+	return value == 1 ? text_on : text_off;
 };
 ElementViewHandlers['select'] = function (element, value) {
 	if (!selectables[element.subtype]) {
@@ -259,7 +265,6 @@ const SelectablesOptionsHandlers = {};
 Container.SelectablesOptionsHandlers = SelectablesOptionsHandlers;
 
 ElementEditHandlers['str'] = function (ind, element, value) {
-	let result = '';
 	let properties = '';
 	let cur_val = '';
 	if (typeof value === 'number' || typeof value === 'string') {
@@ -275,10 +280,11 @@ ElementEditHandlers['str'] = function (ind, element, value) {
 		properties += ' maxlength="' + element.max_len + '"';
 		properties += ` onkeyup="PAF.textCounter('${ind}', ${element.max_len});"`;
 		properties += ` onfocus="PAF.textCounter('${ind}', ${element.max_len});"`;
-		properties += ' data-toggle="tooltip" title="Печатай!"';
+		properties += ' data-toggle="tooltip" title="Type a value"';
 		cls += ' tooltipped';
 	}
 
+	let result = '';
 	if (element.long) {
 		result += `<textarea id="${ind}">${cur_val}</textarea>`;
 	} else {
@@ -287,6 +293,50 @@ ElementEditHandlers['str'] = function (ind, element, value) {
 		}
 		result += `<input type="text" id="${ind}" ${properties} class="${cls}">`;
 	}
+	return result;
+}
+ElementEditHandlers['int'] = function (ind, element, value) {
+	let cls = 'form-control edit-element-int';
+	let properties = 'step="1"';
+	if (exists(value))
+		properties += ` value="${parseInt(value)}"`;
+	else
+		properties += ` value="0"`;
+	if (isDefined(element.min))
+		properties += ` min="${element.min}"`;
+	if (isDefined(element.max))
+		properties += ` max="${element.max}"`;
+	let result = '';
+	result += `<input type="number" id="${ind}" ${properties} class="${cls}">`;
+	return result;
+}
+Container.updateSwitch = function (ind, text_on, text_off) {
+	const obj = $(`#${ind}`);
+	const label = $(`#${ind}-label`);
+	if (obj.is(':checked')) {
+		label.html(text_on);
+	} else {
+		label.html(text_off);
+	}
+}
+ElementEditHandlers['bool'] = function (ind, element, value) {
+	const text_on = element.on || 'on';
+	const text_off = element.off || 'off';
+	let cls = 'form-control edit-element-bool';
+	let properties = '';
+	let text;
+	if (value == 1) {
+		properties += ' checked';
+		text = text_on;
+	} else {
+		text = text_off;
+	}
+	properties += ` onchange="PAF.updateSwitch('${ind}', '${text_on}', '${text_off}')"`;
+	let result = '';
+	result += '<div class="col-xs-2">'
+	result += `<input type="checkbox" id="${ind}" ${properties} class="${cls}">`;
+	result += '</div><div class="col-xs-8">'
+	result += `<span id="${ind}-label">${text}</span></div>`;
 	return result;
 }
 ElementEditHandlers['select'] = function (ind, element, value) {
@@ -365,6 +415,9 @@ ElementExtractHandlers['int'] = function (ind, element) {
 ElementExtractHandlers['str'] = function (ind, element) {
 	return $('#' + ind).val();
 }
+ElementExtractHandlers['bool'] = function (ind, element) {
+	return $('#' + ind).is(':checked');
+}
 ElementExtractHandlers['select'] = function (ind, element) {
 	let value = $('#' + ind).val();
 	if (value === SELECT_NULL)
@@ -426,6 +479,9 @@ ElementValidateHandlers['str'] = function (element, value) {
 			return `Text length is ${value.length}, but max is ${element.max_len}`;
 		}
 	}
+}
+ElementValidateHandlers['bool'] = function (element, value) {
+	return null;
 }
 ElementValidateHandlers['select'] = function (element, value) {
 	if (!exists(value) && !element.allow_clear)
@@ -521,7 +577,7 @@ Container.addCustomSelectable = function (subtype, obj) {
 	}
 }
 
-// TODO: int, bool, date types
+// TODO: date types
 
 return Container;
 }(jQuery);
