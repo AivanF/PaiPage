@@ -2,8 +2,7 @@
 .menu-top {
 	background-color: hsl(210,33%,33%);
 	color: white;
-	padding: 0;
-	height: 128px;
+	padding: 8px 0px;
 }
 .menu-top-title {
 	display: block;
