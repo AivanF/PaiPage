@@ -10,6 +10,7 @@ from django.shortcuts import render, render_to_response
 from django.views import View
 from django.http import Http404
 
+from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.csrf import csrf_exempt
@@ -42,7 +43,7 @@ class PageView(View):
 				'title': config.language_available[params['lang']]['errorNoLang'],
 				'description': '',
 			})
-			return params.render('ot-nolang')
+			return HttpResponse(params.render_file('ot-nolang'))
 
 		else:
 			text.text_full = params.render_str(text.text_full)
@@ -66,4 +67,4 @@ class PagePreView(View):
 		except jinja2.exceptions.TemplateError as ex:
 			params['title'] = 'Template error!'
 			params['description'] = repr(ex)
-			return params.render('ot-output')
+			return HttpResponse(params.render_file('ot-output'))
