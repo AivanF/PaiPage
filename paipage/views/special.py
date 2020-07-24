@@ -4,7 +4,7 @@ __contact__ = 'projects@aivanf.com'
 
 import traceback
 
-from django.shortcuts import render_to_response
+from django.http import HttpResponse
 
 from paipage import config, const
 
@@ -20,12 +20,10 @@ def handler404(request, *args, **argv):
 	layout = config.template_layout_default + const.HTML_EXT
 	params.update({
 		'layout_template': layout,
-		'title': config.language_available[params['lang']].strings['error404'],
+		'title': config.language_available[params['lang']]['error404'],
 		'description': '',
 	})
-	response = render_to_response('ot-output.html', params.prepare())
-	response.status_code = 404
-	return response
+	return HttpResponse(params.render_file('ot-output'), status=404)
 
 
 def handler500(request, *args, **argv):
@@ -33,9 +31,7 @@ def handler500(request, *args, **argv):
 	layout = config.template_layout_default + const.HTML_EXT
 	params.update({
 		'layout_template': layout,
-		'title': config.language_available[params['lang']].strings['error500'],
+		'title': config.language_available[params['lang']]['error500'],
 		'description': '',
 	})
-	response = render_to_response('ot-output.html', params.prepare())
-	response.status_code = 500
-	return response
+	return HttpResponse(params.render_file('ot-output'), status=500)
