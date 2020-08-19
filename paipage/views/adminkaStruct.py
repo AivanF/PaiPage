@@ -115,7 +115,10 @@ class AdminkaPageView(View):
 			page.layout = '' if page.layout is None else page.layout
 			page.template = j['template_page']
 			page.template = '' if page.template is None else page.template
-			page.other_settings = json.dumps(j['other_settings'])
+			if 'other_settings' in j:
+				page.other_settings = json.dumps(j['other_settings'])
+			else:
+				page.other_settings = '{}'
 
 		if res['success']:
 			page.updated_by = request.user
