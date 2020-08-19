@@ -6,6 +6,15 @@
 	<h1>{{ title }}</h1>
 	<div class="page-main-content">
 		{{ description |safe }}
+		{% if other_langs |length > 0 %}
+			{{ config.language_available[lang]['errorNoLangOther'] }}
+			<ul>
+			{% for text in other_langs %}<li>
+				{{ config.language_available[text.language].name }}:
+				<a href="/{{text.language}}/{{current.url}}">{{ text.title }}</a>
+			</li>{% endfor %}
+			</ul>
+		{% endif %}
 	</div>
 	{%- if request.user.is_staff %}
 	<div class="col-xs-12 admin-footer">

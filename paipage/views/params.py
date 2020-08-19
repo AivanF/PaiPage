@@ -11,10 +11,10 @@ import paipage.templating as templating
 
 
 class Params():
-	def __init__(self, request):
-		lang = None
-		if LANG_KEY in request.session:
-			lang = request.session[LANG_KEY]
+	def __init__(self, request, lang=None):
+		if lang is None:
+			if LANG_KEY in request.session:
+				lang = request.session[LANG_KEY]
 		if lang not in config.language_available:
 			lang = config.language_default
 			request.session[LANG_KEY] = lang

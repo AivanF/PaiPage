@@ -106,6 +106,7 @@ REQUIRED_STRINGS = (
 	'languages',  # lang selection menu
 	'error404',  # for bad URLs
 	'errorNoLang',  # for pages with no text in current lang
+	'errorNoLangOther',  # "check other languages"
 	'back',  # "Back" link
 )
 
@@ -142,6 +143,7 @@ lang_en = Language(
 		error404='Page not found',
 		error500='Server error :(',
 		errorNoLang='Not available in this language',
+		errorNoLangOther='You can read the page in another language:',
 		back='Back',
 	),
 )
@@ -153,6 +155,7 @@ lang_ru = Language(
 		error404='Страница не найдена',
 		error500='Ошибка сервера :(',
 		errorNoLang='Недоступно на этом языке',
+		errorNoLangOther='Вы можете посмотреть на другом языке:',
 		back='Назад',
 	),
 )

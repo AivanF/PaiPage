@@ -11,6 +11,7 @@ urlpatterns = [
 	path('', views.PageView.as_view()),
 	path('<slug:path>', views.PageView.as_view()),
 	path('_lang/<slug:lang>', views.ChangeLangView.as_view()),
+	path('<slug:lang>/<slug:path>', views.PageView.as_view()),
 
 	path('adminka/', views.AdminkaMainView.as_view()),
 	path('adminka/plugins', views.AdminkaPluginsView.as_view()),

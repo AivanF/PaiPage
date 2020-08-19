@@ -24,8 +24,8 @@ from .params import Params
 
 
 class PageView(View):
-	def get(self, request, path=PATH_INDEX):
-		params = Params(request)
+	def get(self, request, path=PATH_INDEX, lang=None):
+		params = Params(request, lang=lang)
 		lang = params['lang']
 
 		page = Page.objects.filter(url=path).first()
@@ -33,15 +33,17 @@ class PageView(View):
 			raise Http404
 
 		text = page.get_text(lang)
-		
+
 		if text is None:
 			config.logger.error(f'No lang "{lang}" for page "{path}"')
 			layout = config.template_layout_default + HTML_EXT
+			other_langs = list(page.texts.all())
 			params.update({
 				'current': page,
 				'layout_template': layout,
 				'title': config.language_available[params['lang']]['errorNoLang'],
 				'description': '',
+				'other_langs': other_langs,
 			})
 			return HttpResponse(params.render_file('ot-nolang'))
 
