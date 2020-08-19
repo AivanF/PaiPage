@@ -2,7 +2,8 @@ __author__ = 'AivanF'
 __copyright__ = 'Copyright 2020, AivanF'
 __contact__ = 'projects@aivanf.com'
 
-import os, sys
+import os
+import sys
 import importlib
 import shutil
 import re
@@ -50,15 +51,15 @@ config = Config()
 
 
 def configure(
-		site_name,
-		language_default,
-		language_available,
-		template_page_default='pg-pure',
-		template_layout_default='lo-pure',
-		plugin_paths=[],
-		plugin_enabled=['simple'],
-		logger=None,
-		):
+	site_name,
+	language_default,
+	language_available,
+	template_page_default='pg-pure',
+	template_layout_default='lo-pure',
+	plugin_paths=[],
+	plugin_enabled=['simple'],
+	logger=None,
+):
 
 	'''
 		Basic setup
@@ -105,7 +106,8 @@ def load_plugin_code(plugin_info):
 	code_file = os.path.join(plugin_dir, '__init__.py')
 	if os.path.exists(code_file):
 		module_name = f'pai_plugin_{plugin_name}'
-		module = importlib.machinery.SourceFileLoader(module_name, code_file).load_module()
+		module = importlib.machinery.SourceFileLoader(
+			module_name, code_file).load_module()
 		attr2attr(module, plugin_info, 'template_handlers')
 		attr2attr(module, plugin_info, '__title__', 'title')
 		attr2attr(module, plugin_info, '__version__', 'version')
@@ -194,7 +196,7 @@ def configure_final():
 	from django.conf import settings
 	from .models import GlobalSetting
 
-	## Plugins loading
+	# # Plugins loading
 	config.plugins_installed = {}
 	for app in settings.INSTALLED_APPS:
 		app_path = os.path.dirname(sys.modules[app].__file__)
@@ -202,7 +204,7 @@ def configure_final():
 	for path in config.plugin_paths:
 		collect_plugins(path)
 
-	## Plugins enabling
+	# # Plugins enabling
 	saved_plugins = GlobalSetting.get_json('plugins_meta', [])
 	if not saved_plugins:
 		saved_plugins = [
@@ -233,6 +235,6 @@ def configure_final():
 
 	config.jinja2 = make_env(template_dirs=config.template_dirs, config=config)
 
-	## Django settings
+	# # Django settings
 	settings.STATICFILES_DIRS.extend(config.static_dirs)
 	settings.SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
