@@ -8,11 +8,6 @@ from django.urls import path, include
 from . import views
 
 urlpatterns = [
-	path('', views.PageView.as_view()),
-	path('<slug:path>', views.PageView.as_view()),
-	path('_lang/<slug:lang>', views.ChangeLangView.as_view()),
-	path('<slug:lang>/<slug:path>', views.PageView.as_view()),
-
 	path('adminka/', views.AdminkaMainView.as_view()),
 	path('adminka/plugins', views.AdminkaPluginsView.as_view()),
 	path('adminka/structure', views.AdminkaStructureView.as_view()),
@@ -20,4 +15,9 @@ urlpatterns = [
 	path('adminka/page/create', views.AdminkaPageView.as_view()),
 	path('adminka/preview/<int:ind>', views.PagePreView.as_view()),
 	path('adminka/text/<int:pk>/<slug:lang>', views.AdminkaPageTextView.as_view()),
+
+	path('', views.PageView.as_view()),
+	path('<slug:path>', views.PageView.as_view()),
+	path('_lang/<slug:lang>', views.ChangeLangView.as_view()),
+	path('<slug:lang>/<slug:path>', views.PageView.as_view()),
 ]
