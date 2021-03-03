@@ -16,9 +16,9 @@ from .params import Params
 
 
 class AdminkaMainView(View):
-	@method_decorator(staff_member_required)
-	def get(self, request):
-		params = Params(request)
-		params['site_name'] = config.site_name
-		params['debug'] = settings.DEBUG
-		return HttpResponse(params.render_file('am-main'))
+    @method_decorator(staff_member_required)
+    def get(self, request):
+        params = Params(request)
+        params['site_name'] = config.site_name
+        params['debug'] = settings.DEBUG
+        return HttpResponse(params.render_file('am-main'))

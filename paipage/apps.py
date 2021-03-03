@@ -11,4 +11,4 @@ class PaiPaiConfig(AppConfig):
     name = 'paipage'
 
     def ready(self):
-    	configure_final()
+        configure_final()

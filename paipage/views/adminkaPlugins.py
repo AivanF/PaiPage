@@ -19,46 +19,46 @@ from .params import Params
 
 
 class AdminkaPluginsView(View):
-	@method_decorator(staff_member_required)
-	def get(self, request):
-		params = Params(request)
-		params.scripted['pluginsInstalled'] = {
-			name: config.plugins_installed[name].as_dict()
-			for name in config.plugins_installed
-		}
-		params.scripted['pluginsMeta'] = config.get_plugin_meta_plain()
+    @method_decorator(staff_member_required)
+    def get(self, request):
+        params = Params(request)
+        params.scripted['pluginsInstalled'] = {
+            name: config.plugins_installed[name].as_dict()
+            for name in config.plugins_installed
+        }
+        params.scripted['pluginsMeta'] = config.get_plugin_meta_plain()
 
-		params.scripted['template_layout_default'] = config.template_layout_default
-		params.scripted['template_page_default'] = config.template_page_default
+        params.scripted['template_layout_default'] = config.template_layout_default
+        params.scripted['template_page_default'] = config.template_page_default
 
-		params.scripted['page_templates'] = {
-			d['template']: d['count']
-			for d in Page.objects.values('template').annotate(count=Count('template'))
-		}
-		params.scripted['layout_templates'] = {
-			d['layout']: d['count']
-			for d in Page.objects.values('layout').annotate(count=Count('layout'))
-		}
+        params.scripted['page_templates'] = {
+            d['template']: d['count']
+            for d in Page.objects.values('template').annotate(count=Count('template'))
+        }
+        params.scripted['layout_templates'] = {
+            d['layout']: d['count']
+            for d in Page.objects.values('layout').annotate(count=Count('layout'))
+        }
 
-		return HttpResponse(params.render_file('am-plugins'))
+        return HttpResponse(params.render_file('am-plugins'))
 
-	@method_decorator(staff_member_required)
-	def post(self, request):
-		j = json.loads(request.body.decode('utf-8'))
+    @method_decorator(staff_member_required)
+    def post(self, request):
+        j = json.loads(request.body.decode('utf-8'))
 
-		pluginsMeta = j['pluginsMeta']
-		plugins_meta = [
-			const.PluginMeta(**kwargs)
-			for kwargs in pluginsMeta
-		]
+        pluginsMeta = j['pluginsMeta']
+        plugins_meta = [
+            const.PluginMeta(**kwargs)
+            for kwargs in pluginsMeta
+        ]
 
-		config.plugins_meta = plugins_meta
-		GlobalSetting.set_json('plugins_meta', config.get_plugin_meta_plain(), by=request.user)
-		configure_final()
+        config.plugins_meta = plugins_meta
+        GlobalSetting.set_json('plugins_meta', config.get_plugin_meta_plain(), by=request.user)
+        configure_final()
 
-		res = {
-			'success': True,
-			'comment': '-',
-		}
+        res = {
+            'success': True,
+            'comment': '-',
+        }
 
-		return HttpResponse(json.dumps(res))
+        return HttpResponse(json.dumps(res))
