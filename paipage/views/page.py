@@ -6,7 +6,7 @@ import json
 
 import jinja2
 
-from django.shortcuts import render, render_to_response
+from django.shortcuts import render
 from django.views import View
 from django.http import Http404
 
