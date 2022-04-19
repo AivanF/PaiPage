@@ -5,10 +5,10 @@ with open('README.md', 'r') as f:
 
 setuptools.setup(
     name='PaiPage',
-    version='1.0.3',
+    version='1.0.4',
     author='AivanF.',
     author_email='projects@aivanf.com',
-    description='A small Python library to deal with big tables',
+    description='A simple CMS with languages and themes',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/AivanF/PaiPage',

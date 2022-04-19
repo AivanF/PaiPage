@@ -60,7 +60,7 @@
 	{%- endif %}
 {%- endmacro %}
 
-{% macro make_lang_btn() -%}
+{% macro make_lang_menu() -%}
 	{% if config.language_available |length > 1 -%}
 	<span class="dropdown menu-top-section">
 		<span class="dropdown-toggle menu-section-link" type="button" id="menu-langs" data-toggle="dropdown">
@@ -78,5 +78,17 @@
 			{%- endfor %}
 		</ul>
 	</span>
+	{%- endif %}
+{%- endmacro %}
+
+{% macro make_lang_icons() -%}
+	{% if config.language_available |length > 1 -%}
+	{% for key, x in config.language_available.items() -%}
+	{% if key != lang %}
+	<a role="menuitem" href="/_lang/{{ key }}?next={{ request.path }}">
+		<img src="{{ x['icon'] }}" class="lang-img">
+	</a>
+	{%- endif %}
+	{%- endfor %}
 	{%- endif %}
 {%- endmacro %}

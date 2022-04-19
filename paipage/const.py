@@ -37,10 +37,10 @@ class SettingObj:
 
 
 class PluginInfo(SettingObj):
-    _serialise = [
+    _serialise = (
         'title', 'description', 'version', 'license', 'author', 'contact',
         'name', 'path', 'template_page_list', 'template_layout_list',
-    ]
+    )
     _repr = ['name', 'version']
 
     def __init__(self, plugin_name, plugin_dir):
@@ -59,9 +59,9 @@ class PluginInfo(SettingObj):
 
 
 class PluginMeta(SettingObj):
-    _serialise = [
+    _serialise = (
         'name', 'enabled',
-    ]
+    )
     _repr = ['name', 'enabled']
 
     def __init__(self, name, enabled=False):
